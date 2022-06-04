@@ -6,10 +6,8 @@ from ane_searcher_bot.parser import a_joke
 class FSM(object):
     def __init__(self, notify_method=None):
         states = [
-            # 'size', 'pay_method', 'confirm', 'finalize'
             'start',
             transitions.State('word', ignore_invalid_triggers=True),
-            'more',
             'telling'
         ]
         transition = [
@@ -87,6 +85,7 @@ class FSM(object):
     def nexter(self, _):
         print("nexter(self, _) self.word", self.word)
         joke = next(a_joke(self.word)) + '\n'
+        print("cache info ", )
         self.joke = joke
         return joke
 
@@ -105,4 +104,5 @@ class FSM(object):
 
     def reset(self, _):
         self.joke = None
+        a_joke.cache_clear()
         self.swear = 'Пидора ответ.\n'
