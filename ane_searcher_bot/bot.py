@@ -1,6 +1,8 @@
 from .fsm import FSM
 import transitions
 
+from .cache import cache
+
 
 
 class Listeners:
@@ -12,6 +14,14 @@ class Listeners:
 
     def set(self, id, state,):
         self._storage[id] = state
+    #TODO поля для базы:
+    # id (chat.id),
+    # state (возможно после того как выталкнет из кэша)
+    # word (чтобы можно было продолжить ту же тему после перерыва)
+    # page (номер страницы с анекдотами на сайте)
+    # anecdot_index (порядковый номер анекдота)
+
+
 
 class Bot:
     def __init__(self, fsm=FSM, storage=Listeners()):
@@ -30,7 +40,8 @@ class Bot:
             return state.get_dialog()
         try:
             if state.state == 'word':
-                state.store_word(message)
+                state.store_word(message, client_id)
+                cache._set_user_word(client_id, message)
                 state.trigger('search_word_for_get_joke')
             else:
                 state.trigger(message)

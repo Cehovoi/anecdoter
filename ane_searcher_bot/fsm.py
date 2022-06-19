@@ -1,6 +1,7 @@
 import transitions
 
 from ane_searcher_bot.parser import a_joke
+from .cache import cache
 
 
 class FSM(object):
@@ -27,10 +28,9 @@ class FSM(object):
                 'trigger': 'search_word_for_get_joke', # ignored
                 'source': 'word',
                 'dest': 'telling',
-                'after': 'nexter'
+                'after': 'nexter',
 
             },
-
             {
                 'trigger': 'да',
                 'source': 'telling',
@@ -78,15 +78,19 @@ class FSM(object):
     #     print("self.word\n"*4, self.word)
     #     print("event_data", event_data, "event_data.event", event_data.event)
 
-    def store_word(self, message):
+    def store_word(self, message, client_id):
         self.word = message
+        self.client_id = client_id
         print("self.word\n"*4, self.word)
 
     def nexter(self, _):
+        """
         print("nexter(self, _) self.word", self.word)
         joke = next(a_joke(self.word)) + '\n'
         print("cache info ", )
         self.joke = joke
+        """
+        joke = cache.last_user_word_function(self.client_id)
         return joke
 
 

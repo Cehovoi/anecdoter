@@ -26,13 +26,13 @@ def get_jokes(word, page=1):
 		pageslist_amount = tuple(filter(lambda x: x.isdigit(),
 										pageslist[0].text))[-1]
 	print('text amount_pages', pageslist_amount)
-	return (jokes, pageslist_amount)
+	return jokes, pageslist_amount
 
 @lru_cache
-def a_joke(word, page=1):
+def a_joke(word, page=1, index=0):
 	jokes, amount_pages = get_jokes(word, page)
 	try:
-		for joke in jokes:
+		for joke in jokes[index:]:
 			#print(joke.text)
 			yield joke.text
 	except StopIteration:
