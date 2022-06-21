@@ -1,19 +1,29 @@
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 
+pageslist_amount = 0
+
+
+def get_url(word, page=1):
+    url = 'https://www.anekdot.ru/search/?query={}&ch[j]=on&page={}'.format(
+        word, page)
+    return url
+
+
 def get_jokes(word, page=1):
-	global pageslist_amount
-	session = HTMLSession()
-	url = get_url(word=word, page=page)
-	response = session.get(url)
-	soup = BeautifulSoup(response.text, 'lxml') #"html.parser"
-	jokes = soup.find_all("div", {"class": "text"})
-	if not pageslist_amount:
-		pageslist = soup.find_all("div", {"class": "pageslist"})
-		pageslist_amount = tuple(filter(lambda x: x.isdigit(),
-										pageslist[0].text))[-1]
-	print('text amount_pages', pageslist_amount)
-	return jokes, pageslist_amount
+    global pageslist_amount
+    session = HTMLSession()
+    url = get_url(word=word, page=page)
+    response = session.get(url)
+    soup = BeautifulSoup(response.text, 'lxml')  # "html.parser"
+    jokes = soup.find_all("div", {"class": "text"})
+    if not pageslist_amount:
+        pageslist = soup.find_all("div", {"class": "pageslist"})
+        pageslist_amount = tuple(filter(lambda x: x.isdigit(),
+                                        pageslist[0].text))[-1]
+    print('text amount_pages', pageslist_amount)
+    return jokes, pageslist_amount
+
 
 class Cache():
     def __init__(self):
@@ -30,16 +40,17 @@ class Cache():
         """
         user_cache = self.get_user_cache(uid)
         if not user_cache.get('last_word'):
-           user_cache['last_word'] = word
+            user_cache['last_word'] = word
 
         if not user_cache.get('last_word_f'):
             jokes, _ = get_jokes(word)
+
             # Эта функция должна выдаваться фабрикой
             def jokefunc(jokes):
                 for joke in jokes:
                     yield joke.text
-            user_cache['last_word_f'] = jokefunc(jokes)
 
+            user_cache['last_word_f'] = jokefunc(jokes)
 
     def last_user_word(self, uid):
         user_cache = self.get_user_cache(uid)
