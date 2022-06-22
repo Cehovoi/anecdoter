@@ -25,7 +25,6 @@ class Combiner:
         session.add(word)
         user = User(chat_id=self.uid, words=[word])
         session.add(user)
-        print("session.new", session.new)
         session.commit()
         session.close()
 
@@ -33,7 +32,6 @@ class Combiner:
         word = Word(word=self.word, amount_pages=self.amount_pages)
         user.words.append(word)
         session.add(user)
-        print("session.new", session.new)
         session.commit()
         session.close()
 
@@ -42,10 +40,16 @@ class Combiner:
         if not user.first():
             self.create_user()
             return
-        if user.filter(User.words.any(word=self.word)).first():
-            # words exists, what to do?
-            return
-        self.add_word(user)
+        user_have_word = user.filter(User.words.any(word=self.word)).first()
+        if user_have_word:
+            word = session.query(Word).filter_by(chat_id=self.uid).first()
+            word.joke_index = self.joke_index
+            word.page_num = self.page_num
+            session.add(word)
+            session.commit()
+            session.close()
+        else:
+            self.add_word(user.first())
 
     @lru_cache
     def jokefunc(self):

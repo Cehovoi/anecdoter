@@ -3,29 +3,6 @@ from requests_html import HTMLSession
 
 from ane_searcher_bot.contoller import Combiner
 
-pageslist_amount = 0
-
-
-def get_url(word, page=1):
-    url = 'https://www.anekdot.ru/search/?query={}&ch[j]=on&page={}'.format(
-        word, page)
-    return url
-
-
-def get_jokes(word, page=1):
-    global pageslist_amount
-    session = HTMLSession()
-    url = get_url(word=word, page=page)
-    response = session.get(url)
-    soup = BeautifulSoup(response.text, 'lxml')  # "html.parser"
-    jokes = soup.find_all("div", {"class": "text"})
-    if not pageslist_amount:
-        pageslist = soup.find_all("div", {"class": "pageslist"})
-        pageslist_amount = tuple(filter(lambda x: x.isdigit(),
-                                        pageslist[0].text))[-1]
-    print('text amount_pages', pageslist_amount)
-    return jokes, pageslist_amount
-
 
 class Cache():
     def __init__(self):
@@ -36,29 +13,27 @@ class Cache():
             self._cache[uid] = {}
         return self._cache[uid]
 
-    def _set_user_word(self, uid, word):
+    def _set_user_word(self, uid, word=None, user_cache=None):
         """
           Setting user word for example
         """
-        user_cache = self.get_user_cache(uid)
-        args = ['word', 'amount_pages',
-                'joke_index', 'page_num', 'state']
+        if not user_cache:
+            user_cache = self.get_user_cache(uid)
+        # args = ['word', 'amount_pages',
+        #         'joke_index', 'page_num', 'state']
         if not user_cache.get('word'):
             user_cache['word'] = word
             combiner = Combiner(uid, word)
             combiner.run_parser()
             combiner.sync_db()
+            user_cache['amount_pages'] = combiner.amount_pages
+            user_cache['page_num'] = combiner.page_num
+            user_cache['joke_index'] = combiner.joke_index
         else:
             print("in else")
-            # combiner = Combiner(uid, word, user_cache['amount_pages'],
-            #                     user_cache['joke_index'],
-            #                     user_cache['page_num'],
-            #                     user_cache['state'])
-            combiner = Combiner(uid, **dict(user_cache[key] for key in args))
-
+            print("user_cache", user_cache)
+            combiner = Combiner(uid, **user_cache)
             combiner.run_parser()
-        user_cache.update({key: getattr(combiner, key)
-                           for key in args})
         user_cache['word_f'] = combiner.jokefunc()
         self._cache[uid] = user_cache
 
@@ -70,17 +45,20 @@ class Cache():
             user_cache['last_word'] = 'жопа'
         return user_cache['last_word']
 
-    def last_user_word_function(self, uid, jokes=None):
+    def last_user_word_function(self, uid):
         print('call!')
         user_cache = self.get_user_cache(uid)
         try:
             joke = next(user_cache['word_f'])
+            user_cache['joke_index'] += 1
         except StopIteration:
             user_cache['page_num'] += 1
             if user_cache['page_num'] <= user_cache['amount_pages']:
-                pass
+                self._set_user_word(uid, user_cache=user_cache)
+                self.last_user_word_function(uid)  # recursion!
             else:
                 user_cache['page_num'] = 1
+                joke = 'Анекдоты закончились, все пойдет заново'
 
         return joke
 

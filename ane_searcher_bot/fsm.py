@@ -2,6 +2,7 @@ import transitions
 
 from ane_searcher_bot.parser import a_joke
 from .cache import cache
+from .contoller import Combiner
 
 
 class FSM(object):
@@ -25,7 +26,7 @@ class FSM(object):
                 'dest': 'start',
             },
             {
-                'trigger': 'search_word_for_get_joke', # ignored
+                'trigger': 'search_word_for_get_joke',  # ignored
                 'source': 'word',
                 'dest': 'telling',
                 'after': 'nexter',
@@ -58,10 +59,9 @@ class FSM(object):
             send_event=True
         )
         self.word = None
-        #self.notify_method = notify_method
+        # self.notify_method = notify_method
         self.joke = None
         self.swear = ''
-
 
     def get_dialog(self):
         print(" get_dialog self.state", self.state)
@@ -81,13 +81,11 @@ class FSM(object):
     def store_word(self, message, client_id):
         self.word = message
         self.client_id = client_id
-        print("self.word\n"*4, self.word)
 
     def nexter(self, _):
         joke = cache.last_user_word_function(self.client_id)
         self.joke = joke
         return joke
-
 
     def notify(self, _):
         print("def notify(self, _):", )
@@ -102,6 +100,15 @@ class FSM(object):
     #         self.notify_method(self.size, self.pay_method)
 
     def reset(self, _):
+        """
+            Reset word in cache, push data to db.
+        """
+        print("IN REset")
+        user_cache = cache.get_user_cache(self.client_id)
+        user_cache.pop('word_f')
+        combiner = Combiner(self.client_id, **user_cache)
+        combiner.sync_db()
         self.joke = None
-        a_joke.cache_clear()
+        # a_joke.cache_clear()
+
         self.swear = 'Пидора ответ.\n'

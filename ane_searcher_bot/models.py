@@ -17,7 +17,7 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
-    chat_id = Column(Integer)
+    chat_id = Column(Integer, unique=True)
     words = relationship('Word')
     state = Column(String, default='start')
     created = Column(DateTime, default=datetime.now())
@@ -36,10 +36,10 @@ class Word(Base):
     __tablename__ = 'words'
     id = Column(Integer, primary_key=True)
     word = Column(String(128))
+    amount_pages = Column(Integer)
     joke_index = Column(Integer, default=1)
     page_num = Column(Integer, default=1)
-    amount_pages = Column(Integer)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    chat_id = Column(Integer, ForeignKey("users.chat_id"))
     created = Column(DateTime, default=datetime.now)
 
     def __init__(self, word, amount_pages):
@@ -70,19 +70,26 @@ if __name__ == '__main__':
     session = Session()
     #Base.query = session.query_property()
 
-    #recreate_database()
+    # recreate_database()
     #Base.metadata.create_all(engine)
-    # user = session.query(User).filter_by(chat_id=540439923).first()
-    # print(user.words[0].word)
-    # print("type(user.words[0])", type(user.words[0]))
-    # print(user.words[0].word == 'говно')
+    user = session.query(User).filter_by(chat_id=540439923).first()
+    print(user)
+    word = session.query(Word).filter_by(word='говно').first()
+    print(word)
+    # word.joke_index = 5
+    # word.page_num=2
+    # session.add(word)
+    # session.commit()
+    # session.close()
+
+
 
     # user = session.query(User).filter(User.words.any(word='говно')).filter(User(chat_id=540439923)).all()
     #user = session.query(User).filter(User.words.any(word='говно'), User(chat_id=540439923))
     #user.filter_by(chat_id=540439923).all()
-    user = session.query(User).filter_by(chat_id=540439923)
-    print("user first", user.first())
-    print("dsada", user.filter(User.words.any(word='говно')).first())
+    # user = session.query(User).filter_by(chat_id=540439923)
+    # print("user first", user.first())
+    # print("dsada", user.filter(User.words.any(word='говно')).first())
 
 
 
