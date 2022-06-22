@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 
+from ane_searcher_bot.contoller import Combiner
+
 pageslist_amount = 0
 
 
@@ -39,18 +41,26 @@ class Cache():
           Setting user word for example
         """
         user_cache = self.get_user_cache(uid)
-        if not user_cache.get('last_word'):
-            user_cache['last_word'] = word
+        args = ['word', 'amount_pages',
+                'joke_index', 'page_num', 'state']
+        if not user_cache.get('word'):
+            user_cache['word'] = word
+            combiner = Combiner(uid, word)
+            combiner.run_parser()
+            combiner.sync_db()
+        else:
+            print("in else")
+            # combiner = Combiner(uid, word, user_cache['amount_pages'],
+            #                     user_cache['joke_index'],
+            #                     user_cache['page_num'],
+            #                     user_cache['state'])
+            combiner = Combiner(uid, **dict(user_cache[key] for key in args))
 
-        if not user_cache.get('last_word_f'):
-            jokes, _ = get_jokes(word)
-
-            # Эта функция должна выдаваться фабрикой
-            def jokefunc(jokes):
-                for joke in jokes:
-                    yield joke.text
-
-            user_cache['last_word_f'] = jokefunc(jokes)
+            combiner.run_parser()
+        user_cache.update({key: getattr(combiner, key)
+                           for key in args})
+        user_cache['word_f'] = combiner.jokefunc()
+        self._cache[uid] = user_cache
 
     def last_user_word(self, uid):
         user_cache = self.get_user_cache(uid)
@@ -63,11 +73,19 @@ class Cache():
     def last_user_word_function(self, uid, jokes=None):
         print('call!')
         user_cache = self.get_user_cache(uid)
-        # if not user_cache.get('last_word_f'):
-        #    user_cache['last_word_f'] = lambda: [
-        #        (yield joke.text) for joke in jokes
-        #    ]
-        return user_cache['last_word_f']()
+        try:
+            joke = next(user_cache['word_f'])
+        except StopIteration:
+            user_cache['page_num'] += 1
+            if user_cache['page_num'] <= user_cache['amount_pages']:
+                pass
+            else:
+                user_cache['page_num'] = 1
+
+        return joke
+
+    def update_state(self, uid, state):
+        self._cache[uid]['state'] = state
 
 
 cache = Cache()

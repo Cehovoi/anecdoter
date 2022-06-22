@@ -84,13 +84,8 @@ class FSM(object):
         print("self.word\n"*4, self.word)
 
     def nexter(self, _):
-        """
-        print("nexter(self, _) self.word", self.word)
-        joke = next(a_joke(self.word)) + '\n'
-        print("cache info ", )
-        self.joke = joke
-        """
         joke = cache.last_user_word_function(self.client_id)
+        self.joke = joke
         return joke
 
 

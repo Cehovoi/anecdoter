@@ -24,7 +24,7 @@ class Listeners:
 
 
 class Bot:
-    def __init__(self, fsm=FSM, storage=Listeners()):
+    def __init__(self, fsm=FSM, storage=cache): # storage=Listeners()):
         self.fsm = fsm
         self.storage = storage
 
@@ -32,20 +32,21 @@ class Bot:
         print(f" joking word'{word}'")
 
     def handle(self, client_id, message):
-        state = self.storage.get(client_id)
+        state = self.storage.get_user_cache(client_id)
         message = message.lower().strip()
-        if state is None:
+        if not state:
             state = self.fsm(notify_method=self.notify)
-            self.storage.set(client_id, state)
+            self.storage.update_state(client_id, state)
             return state.get_dialog()
         try:
+            state = state['state']
             if state.state == 'word':
                 state.store_word(message, client_id)
-                cache._set_user_word(client_id, message)
+                self.storage._set_user_word(client_id, message)
                 state.trigger('search_word_for_get_joke')
             else:
                 state.trigger(message)
-            self.storage.set(client_id, state)
+            self.storage.update_state(client_id, state)
         except Exception as e:
             # if '/' in e:
             #     pass

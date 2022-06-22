@@ -19,6 +19,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     chat_id = Column(Integer)
     words = relationship('Word')
+    state = Column(String, default='start')
     created = Column(DateTime, default=datetime.now())
 
     def __init__(self, chat_id, words):
@@ -57,12 +58,32 @@ def recreate_database():
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
+
+Session = sessionmaker(bind=engine)
+Session.configure(bind=engine)
+session = Session()
+
+
 if __name__ == '__main__':
     Session = sessionmaker(bind=engine)
     Session.configure(bind=engine)
     session = Session()
+    #Base.query = session.query_property()
+
     #recreate_database()
     #Base.metadata.create_all(engine)
+    # user = session.query(User).filter_by(chat_id=540439923).first()
+    # print(user.words[0].word)
+    # print("type(user.words[0])", type(user.words[0]))
+    # print(user.words[0].word == 'говно')
+
+    # user = session.query(User).filter(User.words.any(word='говно')).filter(User(chat_id=540439923)).all()
+    #user = session.query(User).filter(User.words.any(word='говно'), User(chat_id=540439923))
+    #user.filter_by(chat_id=540439923).all()
+    user = session.query(User).filter_by(chat_id=540439923)
+    print("user first", user.first())
+    print("dsada", user.filter(User.words.any(word='говно')).first())
+
 
 
 
@@ -74,9 +95,9 @@ if __name__ == '__main__':
     # session.commit()
     # session.close()
     #
-    w = session.query(Word).all()
-    u = session.query(User).all()
-    print('w', w,  '\nu', u)
+    # w = session.query(Word).all()
+    # u = session.query(User).all()
+    # print('w', w,  '\nu', u)
 
     # u = session.query(User).filter_by(chat_id='567').first()
     # word2 = Word('пипа', 1, 1, 5)
