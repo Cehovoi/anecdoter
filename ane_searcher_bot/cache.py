@@ -4,7 +4,12 @@ from requests_html import HTMLSession
 from ane_searcher_bot.contoller import Combiner
 
 
-class Cache():
+def dic_shortener(original_dict, needless_keys):
+    return {key: value for key, value in
+            original_dict if key not in needless_keys}
+
+
+class Cache:
     def __init__(self):
         self._cache = {}
 
@@ -17,23 +22,31 @@ class Cache():
         """
           Setting user word for example
         """
+        print("_set_user_word(self, uid, word=None, user_cache=None):")
+        print("user_cache", user_cache)
         if not user_cache:
             user_cache = self.get_user_cache(uid)
-        # args = ['word', 'amount_pages',
-        #         'joke_index', 'page_num', 'state']
-        if not user_cache.get('word'):
-            user_cache['word'] = word
-            combiner = Combiner(uid, word)
-            combiner.run_parser()
-            combiner.sync_db()
-            user_cache['amount_pages'] = combiner.amount_pages
-            user_cache['page_num'] = combiner.page_num
-            user_cache['joke_index'] = combiner.joke_index
         else:
-            print("in else")
-            print("user_cache", user_cache)
-            combiner = Combiner(uid, **user_cache)
+            # start parser with updated joke_index and page_num
+            combiner = Combiner(**dic_shortener(user_cache.items(),
+                                                ('state', 'word_f')))
             combiner.run_parser()
+        print("user_cache AFTER", user_cache)
+        cache_word = user_cache.get('word')
+        if not cache_word:
+            # create or read db record
+            combiner = Combiner(uid, word)
+            combiner.sync_db()
+        else:
+            # cache_word != word
+            # save joke_index and page_num old word to db
+            combiner = Combiner(**dic_shortener(user_cache.items(),
+                                                ('state', 'word_f')))
+            combiner.sync_db(change_word=True)
+            # start parser and add new word to db
+            combiner = Combiner(uid, word)
+            combiner.sync_db()
+        user_cache.update(dic_shortener(combiner.__dict__.items(), 'jokes'))
         user_cache['word_f'] = combiner.jokefunc()
         self._cache[uid] = user_cache
 
@@ -48,14 +61,24 @@ class Cache():
     def last_user_word_function(self, uid):
         print('call!')
         user_cache = self.get_user_cache(uid)
+        print("user_cache = self.get_user_cache(uid)", user_cache)
         try:
+            print("BEFORE next(user_cache['word_f'])")
             joke = next(user_cache['word_f'])
+            print("After next(user_cache['word_f'])")
+
             user_cache['joke_index'] += 1
         except StopIteration:
-            user_cache['page_num'] += 1
+            user_cache['page_num'] += 1 # jump on new page
+            user_cache['joke_index'] = 0 # reset because new page
+            print("user_cache", user_cache)
+            print("user_cache['amount_pages']", user_cache['amount_pages'])
+            print("type", type(user_cache['amount_pages']))
             if user_cache['page_num'] <= user_cache['amount_pages']:
-                self._set_user_word(uid, user_cache=user_cache)
-                self.last_user_word_function(uid)  # recursion!
+                print("if user_cache['page_num'] <= user_cache['amount_pages']")
+                self._set_user_word(uid, word=user_cache['word'],
+                                    user_cache=user_cache)
+                joke = self.last_user_word_function(uid)  # recursion!
             else:
                 user_cache['page_num'] = 1
                 joke = 'Анекдоты закончились, все пойдет заново'

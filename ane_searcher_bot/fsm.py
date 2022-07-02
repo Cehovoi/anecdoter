@@ -104,11 +104,5 @@ class FSM(object):
             Reset word in cache, push data to db.
         """
         print("IN REset")
-        user_cache = cache.get_user_cache(self.client_id)
-        user_cache.pop('word_f')
-        combiner = Combiner(self.client_id, **user_cache)
-        combiner.sync_db()
         self.joke = None
-        # a_joke.cache_clear()
-
         self.swear = 'Пидора ответ.\n'

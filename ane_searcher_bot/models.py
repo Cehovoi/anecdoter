@@ -19,12 +19,10 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     chat_id = Column(Integer, unique=True)
     words = relationship('Word')
-    state = Column(String, default='start')
     created = Column(DateTime, default=datetime.now())
 
-    def __init__(self, chat_id, words):
+    def __init__(self, chat_id):
         self.chat_id = chat_id
-        self.words = words
 
     def __repr__(self):
         return f'<User - {self.chat_id}, ' \
@@ -42,9 +40,10 @@ class Word(Base):
     chat_id = Column(Integer, ForeignKey("users.chat_id"))
     created = Column(DateTime, default=datetime.now)
 
-    def __init__(self, word, amount_pages):
+    def __init__(self, word, amount_pages, chat_id):
         self.word = word
         self.amount_pages = amount_pages
+        self.chat_id = chat_id
 
     def __repr__(self):
         return f'<Word - {self.word}, ' \
@@ -72,10 +71,29 @@ if __name__ == '__main__':
 
     # recreate_database()
     #Base.metadata.create_all(engine)
-    user = session.query(User).filter_by(chat_id=540439923).first()
+    chat_id_1 = 540439923
+    chat_id_2 = 123
+    user = session.query(User).filter_by(chat_id=chat_id_2).first()
     print(user)
-    word = session.query(Word).filter_by(word='говно').first()
-    print(word)
+    # word = session.query(Word).filter_by(word='выстрелил в ногу', chat_id=chat_id_2).first()
+    # print(word)
+    # session.delete(word)
+    # session.commit()
+    # print("word", word)
+    #
+    #
+    # word = session.query(Word).filter_by(word='говно', chat_id=chat_id_2).first()
+    # print(word)
+    # word.page_num = 1
+    # word.joke_index = 11
+    # session.add(word)
+    # session.commit()
+    # session.close()
+    # session.delete(word)
+    # session.commit()
+    # session.close()
+
+
     # word.joke_index = 5
     # word.page_num=2
     # session.add(word)

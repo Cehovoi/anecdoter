@@ -5,51 +5,72 @@ from .models import User, Word, session
 
 
 class Combiner:
-    def __init__(self, uid, word, amount_pages=None,
-                 joke_index=0, page_num=1, state='start', jokes=[]):
+    def __init__(self, uid, word, amount_pages=0,
+                 joke_index=0, page_num=1, jokes_len=0):
         self.uid = uid
         self.word = word
         self.amount_pages = amount_pages
         self.joke_index = joke_index
         self.page_num = page_num
-        self.state = state
-        self.jokes = jokes
+        self.jokes_len = jokes_len
 
     def run_parser(self):
-        jokes, amount_pages = get_jokes(self.word, self.page_num) # добавить номер страницы
-        self.jokes = jokes[self.joke_index:] # добавить индекс сюда
+        jokes, amount_pages = get_jokes(self.word, self.page_num,
+                                        self.amount_pages)
         self.amount_pages = amount_pages
+        self.jokes_len = len(jokes)
+        self.jokes = jokes[self.joke_index:]
 
-    def create_user(self):
-        word = Word(word=self.word, amount_pages=self.amount_pages)
-        session.add(word)
-        user = User(chat_id=self.uid, words=[word])
-        session.add(user)
-        session.commit()
-        session.close()
+    def sync_db(self, change_word=False):
+        word = session.query(Word).filter_by(chat_id=self.uid,
+                                             word=self.word).first()
+        if change_word:
+            # user want another theme, save current theme for parser to db
+            page_num, joke_index, amount_pages = \
+                self.page_num, self.joke_index, self.amount_pages
+            if page_num <= amount_pages:
+                if self.jokes_len > joke_index:
+                    joke_index += 1
+                else:
+                    if page_num == amount_pages:
+                        page_num = 1
+                        joke_index = 0
+                    else:
+                        page_num += 1
+                        joke_index = 0
 
-    def add_word(self, user):
-        word = Word(word=self.word, amount_pages=self.amount_pages)
-        user.words.append(word)
-        session.add(user)
-        session.commit()
-        session.close()
+            word.page_num = page_num
+            word.joke_index = joke_index
+            word.amount_pages = amount_pages
+            self.save(word)
 
-    def sync_db(self):
-        user = session.query(User).filter_by(chat_id=self.uid)
-        if not user.first():
-            self.create_user()
-            return
-        user_have_word = user.filter(User.words.any(word=self.word)).first()
-        if user_have_word:
-            word = session.query(Word).filter_by(chat_id=self.uid).first()
-            word.joke_index = self.joke_index
-            word.page_num = self.page_num
-            session.add(word)
-            session.commit()
-            session.close()
         else:
-            self.add_word(user.first())
+            if word:
+                # read info for parser from db
+                self.page_num = word.page_num
+                self.joke_index = word.joke_index
+                self.amount_pages = word.amount_pages
+                self.run_parser()
+            else:
+                # create db record
+                self.run_parser()
+                word = Word(word=self.word, amount_pages=self.amount_pages,
+                            chat_id=self.uid)
+                user = session.query(User).filter_by(chat_id=self.uid).first()
+                if user:
+                    self.save(word)
+                    return
+                user = User(chat_id=self.uid)
+                self.save([word, user], multi=True)
+
+    @staticmethod
+    def save(obj, multi=False):
+        if multi:
+            session.add_all(obj)
+        else:
+            session.add(obj)
+        session.commit()
+        session.close()
 
     @lru_cache
     def jokefunc(self):
