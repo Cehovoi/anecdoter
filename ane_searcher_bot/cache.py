@@ -22,8 +22,6 @@ class Cache:
         """
           Setting user word for example
         """
-        print("_set_user_word(self, uid, word=None, user_cache=None):")
-        print("user_cache", user_cache)
         if not user_cache:
             user_cache = self.get_user_cache(uid)
         else:
@@ -31,7 +29,6 @@ class Cache:
             combiner = Combiner(**dic_shortener(user_cache.items(),
                                                 ('state', 'word_f')))
             combiner.run_parser()
-        print("user_cache AFTER", user_cache)
         cache_word = user_cache.get('word')
         if not cache_word:
             # create or read db record
@@ -59,30 +56,20 @@ class Cache:
         return user_cache['last_word']
 
     def last_user_word_function(self, uid):
-        print('call!')
         user_cache = self.get_user_cache(uid)
-        print("user_cache = self.get_user_cache(uid)", user_cache)
         try:
-            print("BEFORE next(user_cache['word_f'])")
             joke = next(user_cache['word_f'])
-            print("After next(user_cache['word_f'])")
-
             user_cache['joke_index'] += 1
         except StopIteration:
             user_cache['page_num'] += 1 # jump on new page
             user_cache['joke_index'] = 0 # reset because new page
-            print("user_cache", user_cache)
-            print("user_cache['amount_pages']", user_cache['amount_pages'])
-            print("type", type(user_cache['amount_pages']))
             if user_cache['page_num'] <= user_cache['amount_pages']:
-                print("if user_cache['page_num'] <= user_cache['amount_pages']")
                 self._set_user_word(uid, word=user_cache['word'],
                                     user_cache=user_cache)
                 joke = self.last_user_word_function(uid)  # recursion!
             else:
                 user_cache['page_num'] = 1
                 joke = 'Анекдоты закончились, все пойдет заново'
-
         return joke
 
     def update_state(self, uid, state):
