@@ -1,21 +1,23 @@
-from bs4 import BeautifulSoup
-from requests_html import HTMLSession
+from collections import OrderedDict
 
+from ane_searcher_bot.consts import SIZE_OF_CASH, END_WARNING, DOES_NOT_EXISTS
 from ane_searcher_bot.contoller import Combiner
-
-
-def dic_shortener(original_dict, needless_keys):
-    return {key: value for key, value in
-            original_dict if key not in needless_keys}
+from ane_searcher_bot.tools import dic_shortener
 
 
 class Cache:
     def __init__(self):
-        self._cache = {}
+        self._cache = OrderedDict()
 
     def get_user_cache(self, uid):
         if uid not in self._cache:
             self._cache[uid] = {}
+        if len(self._cache) == SIZE_OF_CASH:
+            first = self._cache.popitem(last=False)
+            user_cache = first[1]
+            combiner = Combiner(**dic_shortener(user_cache.items(),
+                                                ('state', 'word_f')))
+            combiner.sync_db(change_word=True)
         return self._cache[uid]
 
     def _set_user_word(self, uid, word=None, user_cache=None):
@@ -57,6 +59,8 @@ class Cache:
 
     def last_user_word_function(self, uid):
         user_cache = self.get_user_cache(uid)
+        if not user_cache['jokes_len']:
+            return
         try:
             joke = next(user_cache['word_f'])
             user_cache['joke_index'] += 1
@@ -69,11 +73,20 @@ class Cache:
                 joke = self.last_user_word_function(uid)  # recursion!
             else:
                 user_cache['page_num'] = 1
-                joke = 'Анекдоты закончились, все пойдет заново'
+                warning = END_WARNING
+                self._set_user_word(uid, word=user_cache['word'],
+                                    user_cache=user_cache)
+                joke = self.last_user_word_function(uid)  # recursion!
+                joke = warning + '\n' + joke
         return joke
 
     def update_state(self, uid, state):
-        self._cache[uid]['state'] = state
+        print('update_state(self, uid, state)')
+
+        user_cache = self.get_user_cache(uid)
+        user_cache['state'] = state
+        print("user_cache", user_cache)
+        #self._cache[uid]['state'] = state
 
 
 cache = Cache()

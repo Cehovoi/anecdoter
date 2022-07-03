@@ -2,6 +2,7 @@ import transitions
 
 from ane_searcher_bot.parser import a_joke
 from .cache import cache
+from .consts import DOES_NOT_EXISTS
 from .contoller import Combiner
 
 
@@ -51,7 +52,7 @@ class FSM(object):
         self.dialogs = {
             'start': '{swear}Рассказать анекдот?',
             'word': 'Давай тему: слово или фраза',
-            'telling': 'Ещё {word}?',
+            'telling': '\nЕщё {word}?',
 
         }
         self.machine = transitions.Machine(
@@ -65,6 +66,7 @@ class FSM(object):
 
     def get_dialog(self):
         print(" get_dialog self.state", self.state)
+        print("self.swear", self.swear)
 
         answer = self.dialogs[self.state].format(
             word=self.word, swear=self.swear)
@@ -84,15 +86,14 @@ class FSM(object):
 
     def nexter(self, _):
         joke = cache.last_user_word_function(self.client_id)
+        if not joke:
+            self.joke = None
+            self.swear = DOES_NOT_EXISTS + '\n'
+            self.state = 'start'
+            return
         self.joke = joke
-        return joke
 
-    def notify(self, _):
-        print("def notify(self, _):", )
-        if self.notify_method is not None:
-            self.notify_method(self.word)
-            print("def notify(self, _):", self.notify_method)
-        return 'a[a[a[a'
+        return joke
 
     # def notify(self, _):
     #     print("self.notify_method ", self.notify_method)
@@ -100,9 +101,5 @@ class FSM(object):
     #         self.notify_method(self.size, self.pay_method)
 
     def reset(self, _):
-        """
-            Reset word in cache, push data to db.
-        """
-        print("IN REset")
         self.joke = None
         self.swear = 'Пидора ответ.\n'

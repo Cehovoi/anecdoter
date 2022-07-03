@@ -15,7 +15,7 @@ class Bot:
 
     def handle(self, client_id, message):
         state = self.storage.get_user_cache(client_id)
-        message = string_formatter(string_formatter)
+        message = string_formatter(message)
         if not state:
             state = self.fsm(notify_method=self.notify)
             self.storage.update_state(client_id, state)
@@ -31,8 +31,6 @@ class Bot:
                 state.trigger(message)
             self.storage.update_state(client_id, state)
         except Exception as e:
-            # if '/' in e:
-            #     pass
             print("Exception!!!", e)
             s = state.machine.get_triggers(state.state)
             answer = list(filter(lambda x: not x.startswith('to_'), s))

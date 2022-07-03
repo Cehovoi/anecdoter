@@ -19,6 +19,7 @@ class Combiner:
                                         self.amount_pages)
         self.amount_pages = amount_pages
         self.jokes_len = len(jokes)
+        # new attribute, with jokes list
         self.jokes = jokes[self.joke_index:]
 
     def sync_db(self, change_word=False):
@@ -54,6 +55,9 @@ class Combiner:
             else:
                 # create db record
                 self.run_parser()
+                # jokes does not exists
+                if not self.amount_pages:
+                    return
                 word = Word(word=self.word, amount_pages=self.amount_pages,
                             chat_id=self.uid)
                 user = session.query(User).filter_by(chat_id=self.uid).first()

@@ -64,19 +64,19 @@ session = Session()
 
 
 if __name__ == '__main__':
-    Session = sessionmaker(bind=engine)
-    Session.configure(bind=engine)
-    session = Session()
     #Base.query = session.query_property()
 
     # recreate_database()
     #Base.metadata.create_all(engine)
     chat_id_1 = 540439923
     chat_id_2 = 123
-    user = session.query(User).filter_by(chat_id=chat_id_2).first()
+    chat_id_3= 321
+    # user = session.query(User).filter_by(chat_id=chat_id_2).first()
+    # print(user)
+    user = session.query(User).all()
     print(user)
-    # word = session.query(Word).filter_by(word='выстрелил в ногу', chat_id=chat_id_2).first()
-    # print(word)
+    word = session.query(Word).filter_by(word='попа', chat_id=chat_id_3).first()
+    print(word)
     # session.delete(word)
     # session.commit()
     # print("word", word)
