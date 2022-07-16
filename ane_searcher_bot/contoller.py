@@ -1,7 +1,9 @@
 from functools import lru_cache
 
 from ane_searcher_bot.parser import get_jokes
-from .models import User, Word, session
+
+
+
 
 
 class Combiner:
@@ -23,7 +25,11 @@ class Combiner:
         self.jokes = jokes[self.joke_index:]
 
     def sync_db(self, change_word=False):
-        word = session.query(Word).filter_by(chat_id=self.uid,
+        from ane_searcher_bot import create_app
+        create_app().app_context().push()
+        from ane_searcher_bot import db
+        from .models import User, Word
+        word = db.session.query(Word).filter_by(chat_id=self.uid,
                                              word=self.word).first()
         if change_word:
             # user want another theme, save current theme for parser to db
@@ -43,7 +49,7 @@ class Combiner:
             word.page_num = page_num
             word.joke_index = joke_index
             word.amount_pages = amount_pages
-            self.save(word)
+            self.save(word, db)
 
         else:
             if word:
@@ -60,21 +66,21 @@ class Combiner:
                     return
                 word = Word(word=self.word, amount_pages=self.amount_pages,
                             chat_id=self.uid)
-                user = session.query(User).filter_by(chat_id=self.uid).first()
+                user = db.session.query(User).filter_by(chat_id=self.uid).first()
                 if user:
-                    self.save(word)
+                    self.save(word, db)
                     return
                 user = User(chat_id=self.uid)
-                self.save([word, user], multi=True)
+                self.save([word, user],db, multi=True)
 
     @staticmethod
-    def save(obj, multi=False):
+    def save(obj, db, multi=False):
         if multi:
-            session.add_all(obj)
+            db.session.add_all(obj)
         else:
-            session.add(obj)
-        session.commit()
-        session.close()
+            db.session.add(obj)
+        db.session.commit()
+        db.session.close()
 
     @lru_cache
     def jokefunc(self):

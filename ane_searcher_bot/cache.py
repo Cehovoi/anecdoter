@@ -20,6 +20,9 @@ class Cache:
             combiner.sync_db(change_word=True)
         return self._cache[uid]
 
+    def set_user_word(self, uid, word=None):
+        pass
+
     def _set_user_word(self, uid, word=None, user_cache=None):
         """
           Setting user word for example

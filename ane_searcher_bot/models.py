@@ -1,25 +1,31 @@
 from datetime import datetime
 
-from sqlalchemy import create_engine, Integer, Column, String, ForeignKey, \
-    DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+# from sqlalchemy import create_engine, Integer, Column, String, ForeignKey, \
+#     DateTime
+# from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy.orm import sessionmaker, relationship
 
-engine = create_engine(
-    "postgresql://zhenya:123@localhost/test_tg",
-    execution_options={
-        "isolation_level": "REPEATABLE READ"
-    }
-)
-Base = declarative_base()
+from flask_login import UserMixin, current_user, login_user, logout_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_admin.contrib.sqla import ModelView
+from ane_searcher_bot import db, admin, login
 
 
-class User(Base):
+# engine = create_engine(
+#     "postgresql://zhenya:123@localhost/test_tg",
+#     execution_options={
+#         "isolation_level": "REPEATABLE READ"
+#     }
+# )
+# Base = declarative_base()
+
+
+class User(db.Model):
     __tablename__ = 'users'
-    id = Column(Integer, primary_key=True)
-    chat_id = Column(Integer, unique=True)
-    words = relationship('Word')
-    created = Column(DateTime, default=datetime.now())
+    id = db.Column(db.Integer, primary_key=True)
+    chat_id = db.Column(db.Integer, unique=True)
+    words = db.relationship('Word')
+    created = db.Column(db.DateTime, default=datetime.now())
 
     def __init__(self, chat_id):
         self.chat_id = chat_id
@@ -30,15 +36,15 @@ class User(Base):
                f'words - {self.words}>'
 
 
-class Word(Base):
+class Word(db.Model):
     __tablename__ = 'words'
-    id = Column(Integer, primary_key=True)
-    word = Column(String(128))
-    amount_pages = Column(Integer)
-    joke_index = Column(Integer, default=1)
-    page_num = Column(Integer, default=1)
-    chat_id = Column(Integer, ForeignKey("users.chat_id"))
-    created = Column(DateTime, default=datetime.now)
+    id = db.Column(db.Integer, primary_key=True)
+    word = db.Column(db.String(128))
+    amount_pages = db.Column(db.Integer)
+    joke_index = db.Column(db.Integer, default=1)
+    page_num = db.Column(db.Integer, default=1)
+    chat_id = db.Column(db.Integer, db.ForeignKey("users.chat_id"))
+    created = db.Column(db.DateTime, default=datetime.now)
 
     def __init__(self, word, amount_pages, chat_id):
         self.word = word
@@ -53,30 +59,73 @@ class Word(Base):
                f'created - {self.created}'
 
 
+class Owner(db.Model, UserMixin):
+    __tablename__ = 'owners'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), nullable=False, unique=True)
+    password_hash = db.Column(db.String(512), nullable=False)
+    created_on = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_on = db.Column(db.DateTime, default=datetime.utcnow,
+                           onupdate=datetime.utcnow)
+
+    @property
+    def set_password(self):
+        raise AttributeError('set_password is not readable attribute')
+
+    @set_password.setter
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return "<{}:{}>".format(self.id, self.username)
+
+
+@login.user_loader
+def load_user(id):
+    return db.session.query(Owner).get(id)  # Owner.query.get(id)
+
+
+class MyModelView(ModelView):
+    can_delete = True
+
+    def is_accessible(self):
+        return current_user.is_authenticated
+
+
+admin.add_view(MyModelView(User, db.session))
+admin.add_view(MyModelView(Word, db.session))
+admin.add_view(MyModelView(Owner, db.session))
+
+
 def recreate_database():
-    Base.metadata.drop_all(engine)
-    Base.metadata.create_all(engine)
+    # Base.metadata.drop_all(engine)
+    # Base.metadata.create_all(engine)
+    db.drop_all()
+    db.create_all()
 
 
-Session = sessionmaker(bind=engine)
-Session.configure(bind=engine)
-session = Session()
+# Session = sessionmaker(bind=engine)
+# Session.configure(bind=engine)
+# session = Session()
 
 
 if __name__ == '__main__':
-    #Base.query = session.query_property()
-
-    # recreate_database()
-    #Base.metadata.create_all(engine)
+    # Base.query = session.query_property()
+    db.create_all()
+    #recreate_database()
+    # Base.metadata.create_all(engine)
     chat_id_1 = 540439923
     chat_id_2 = 123
-    chat_id_3= 321
+    chat_id_3 = 321
     # user = session.query(User).filter_by(chat_id=chat_id_2).first()
     # print(user)
-    user = session.query(User).all()
-    print(user)
-    word = session.query(Word).filter_by(word='попа', chat_id=chat_id_3).first()
-    print(word)
+    # user = session.query(User).all()
+    # print(user)
+    # word = session.query(Word).filter_by(word='попа', chat_id=chat_id_3).first()
+    # print(word)
     # session.delete(word)
     # session.commit()
     # print("word", word)
@@ -93,24 +142,18 @@ if __name__ == '__main__':
     # session.commit()
     # session.close()
 
-
     # word.joke_index = 5
     # word.page_num=2
     # session.add(word)
     # session.commit()
     # session.close()
 
-
-
     # user = session.query(User).filter(User.words.any(word='говно')).filter(User(chat_id=540439923)).all()
-    #user = session.query(User).filter(User.words.any(word='говно'), User(chat_id=540439923))
-    #user.filter_by(chat_id=540439923).all()
+    # user = session.query(User).filter(User.words.any(word='говно'), User(chat_id=540439923))
+    # user.filter_by(chat_id=540439923).all()
     # user = session.query(User).filter_by(chat_id=540439923)
     # print("user first", user.first())
     # print("dsada", user.filter(User.words.any(word='говно')).first())
-
-
-
 
     # word = Word('ципа', amount_pages=5)
     # session.add(word)

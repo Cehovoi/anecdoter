@@ -1,0 +1,11 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+<h1> {{comment}} </h1>
+<p><a href='/login' class='btn btn-success'>Log in</a></p>
+<p><a href='/start' class='btn btn-success'>Start page</a></p>
+<p><a href='/logout' class='btn btn-success'>Logout and Start page</a></p>
+
+<h3 style="color:DarkOrange;">For authenticated admin</h3>
+<p><a href='/oc_fill' class='btn btn-danger'>Add default to Collector and Occasions from inner txt files</a></p
+<p><a href='/ex_fill' class='btn btn-danger'>Create some fake Exhibits</a></p>
+{% endblock body %}

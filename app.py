@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+import os
 import click
 import telebot
-from ane_searcher_bot import Bot as AneBot
-
+from ane_searcher_bot import Bot as AneBot, create_app
+from flask.cli import FlaskGroup
 
 # Anecdoter
 # anecdot_searcher_bot
@@ -24,5 +25,11 @@ def main(token):
             except Exception as e:
                 pass
 
+app = create_app()
+
+#cli = FlaskGroup(app)
 if __name__ == '__main__':
-    main()
+    # app = create_app()
+    app.run(debug=True)
+    #cli()
+    #main()
