@@ -68,18 +68,22 @@ class Cache:
             joke = next(user_cache['word_f'])
             user_cache['joke_index'] += 1
         except StopIteration:
-            user_cache['page_num'] += 1 # jump on new page
-            user_cache['joke_index'] = 0 # reset because new page
+            # jump on new page
+            user_cache['page_num'] += 1
+            # reset because new page
+            user_cache['joke_index'] = 0
             if user_cache['page_num'] <= user_cache['amount_pages']:
                 self._set_user_word(uid, word=user_cache['word'],
                                     user_cache=user_cache)
-                joke = self.last_user_word_function(uid)  # recursion!
+                # recursion!
+                joke = self.last_user_word_function(uid)
             else:
                 user_cache['page_num'] = 1
                 warning = END_WARNING
                 self._set_user_word(uid, word=user_cache['word'],
                                     user_cache=user_cache)
-                joke = self.last_user_word_function(uid)  # recursion!
+                # recursion!
+                joke = self.last_user_word_function(uid)
                 joke = warning + '\n' + joke
         return joke
 

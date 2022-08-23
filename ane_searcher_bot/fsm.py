@@ -52,7 +52,7 @@ class FSM(object):
         self.dialogs = {
             'start': '{swear}Рассказать анекдот?',
             'word': 'Давай тему: слово или фраза',
-            'telling': '\nЕщё {word}?',
+            'telling': '\nЕщё {word} (не забудь оценить этот)?',
 
         }
         self.machine = transitions.Machine(
