@@ -3,6 +3,7 @@ from flask_login import UserMixin, current_user, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_admin.contrib.sqla import ModelView
 from ane_searcher_bot import db, admin, login
+from ane_searcher_bot.consts import SITE_ANECDOT
 
 
 class User(db.Model):
@@ -32,16 +33,17 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return f'\nchat_id = {self.chat_id}\n' \
-               f'username = {self.username}\n' \
-               f'created_on = {self.created_on}\n' \
-               f'words = {self.words}\n'
+        return f'\nchat_id == {self.chat_id}\n' \
+               f'username == {self.username}\n' \
+               f'created_on == {self.created_on}\n' \
+               f'{"w_"*20}\nwords == {self.words}\n{"w_"*20}\n'
 
 
 class Word(db.Model):
     __tablename__ = 'words'
     id = db.Column(db.Integer, primary_key=True)
     word = db.Column(db.String(128))
+    site = db.Column(db.String(128), default=SITE_ANECDOT)
     amount_pages = db.Column(db.Integer)
     joke_index = db.Column(db.Integer, default=1)
     page_num = db.Column(db.Integer, default=1)
@@ -54,12 +56,28 @@ class Word(db.Model):
         self.chat_id = chat_id
 
     def __repr__(self):
-        return f'<Word - {self.word}, ' \
-               f'joke_index - {self.joke_index}, ' \
-               f'page_num - {self.page_num}, ' \
-               f'amount_pages - {self.amount_pages}, ' \
-               f'created - {self.created}'
+        return f'\nword == {self.word}\n' \
+               f'joke_index == {self.joke_index}\n' \
+               f'page_num == {self.page_num}\n' \
+               f'amount_pages == {self.amount_pages}\n' \
+               f'created == {self.created}\n'
 
+
+class JokeRating(db.Model):
+    __tablename__ = 'joke_rating'
+    id = db.Column(db.Integer, primary_key=True)
+    site = db.Column(db.String(64), nullable=False)
+    joke = db.Column(db.String(1024), nullable=False)
+    joke_index = db.Column(db.Integer, default=1)
+    page_num = db.Column(db.Integer, default=1)
+    grade = db.Column(db.Integer, default=1)
+
+    def __init__(self, site, joke, joke_index, page_num, grade):
+        self.site = site
+        self.joke = joke
+        self.joke_index = joke_index
+        self.page_num = page_num
+        self.grade = grade
 
 @login.user_loader
 def load_user(id):
@@ -119,10 +137,19 @@ if __name__ == '__main__':
     chat_id_3 = 321
     # user = session.query(User).filter_by(chat_id=chat_id_2).first()
     # print(user)
-    user = session.query(User).all()
-    print(user)
-    word = session.query(Word).filter_by(word='говно', chat_id=chat_id_1).first()
-    print(word)
+    # user = session.query(User).all()
+    # print(user)
+    #word = session.query(Word).filter_by(word='говно', chat_id=chat_id_1).first()
+    words = session.query(Word).all()
+    #print(words)
+    l = []
+    for word in words:
+        word.site = SITE_ANECDOT
+        l.append(word)
+    session.add_all(l)
+    session.commit()
+    session.close()
+
     # session.delete(word)
     # session.commit()
     # print("word", word)

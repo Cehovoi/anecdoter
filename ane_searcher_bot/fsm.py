@@ -1,9 +1,6 @@
 import transitions
-
-from ane_searcher_bot.parser import a_joke
 from .cache import cache
 from .consts import DOES_NOT_EXISTS, RATING
-from .contoller import Combiner
 
 
 class FSM(object):
@@ -59,7 +56,7 @@ class FSM(object):
         self.dialogs = {
             'start': '{swear}Рассказать анекдот?',
             'word': 'Давай тему: слово или фраза',
-            'telling': '\nЕщё {word}?\n'+RATING,
+            'telling': '\n\nЕщё {word}?\n\n' + RATING,
 
         }
         self.machine = transitions.Machine(
