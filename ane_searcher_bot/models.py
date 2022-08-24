@@ -1,16 +1,8 @@
 from datetime import datetime
-
-# from sqlalchemy import create_engine, Integer, Column, String, ForeignKey, \
-#     DateTime
-# from sqlalchemy.ext.declarative import declarative_base
-# from sqlalchemy.orm import sessionmaker, relationship
-
 from flask_login import UserMixin, current_user, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_admin.contrib.sqla import ModelView
 from ane_searcher_bot import db, admin, login
-
-
 
 
 class User(db.Model):
@@ -18,15 +10,32 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     chat_id = db.Column(db.Integer, unique=True)
     words = db.relationship('Word')
-    created = db.Column(db.DateTime, default=datetime.now())
+    username = db.Column(db.String(64), nullable=True, unique=True)
+    password = db.Column(db.String(64), nullable=True)
+    password_hash = db.Column(db.String(512), nullable=True)
+    created_on = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_on = db.Column(db.DateTime, default=datetime.utcnow,
+                           onupdate=datetime.utcnow)
 
     def __init__(self, chat_id):
         self.chat_id = chat_id
 
+    @property
+    def set_password(self):
+        raise AttributeError('set_password is not readable attribute')
+
+    @set_password.setter
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
     def __repr__(self):
-        return f'<User - {self.chat_id}, ' \
-               f'created - {self.created}, ' \
-               f'words - {self.words}>'
+        return f'\nchat_id = {self.chat_id}\n' \
+               f'username = {self.username}\n' \
+               f'created_on = {self.created_on}\n' \
+               f'words = {self.words}\n'
 
 
 class Word(db.Model):
@@ -52,33 +61,9 @@ class Word(db.Model):
                f'created - {self.created}'
 
 
-class Owner(db.Model, UserMixin):
-    __tablename__ = 'owners'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), nullable=False, unique=True)
-    password_hash = db.Column(db.String(512), nullable=False)
-    created_on = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_on = db.Column(db.DateTime, default=datetime.utcnow,
-                           onupdate=datetime.utcnow)
-
-    @property
-    def set_password(self):
-        raise AttributeError('set_password is not readable attribute')
-
-    @set_password.setter
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-    def __repr__(self):
-        return "<{}:{}>".format(self.id, self.username)
-
-
 @login.user_loader
 def load_user(id):
-    return db.session.query(Owner).get(id)  # Owner.query.get(id)
+    return db.session.query(User).get(id)  # Owner.query.get(id)
 
 
 class MyModelView(ModelView):
@@ -90,7 +75,6 @@ class MyModelView(ModelView):
 
 admin.add_view(MyModelView(User, db.session))
 admin.add_view(MyModelView(Word, db.session))
-admin.add_view(MyModelView(Owner, db.session))
 
 
 def recreate_database():
@@ -107,12 +91,19 @@ if __name__ == '__main__':
     from sqlalchemy import create_engine
     from sqlalchemy.ext.declarative import declarative_base
     from sqlalchemy.orm import sessionmaker, relationship
+    # engine = create_engine(
+    #     "postgresql://zhenya:123@localhost/test_tg",
+    #     execution_options={
+    #         "isolation_level": "REPEATABLE READ"
+    #     }
+    # )
     engine = create_engine(
-        "postgresql://zhenya:123@localhost/test_tg",
+        'postgresql://zhenyavo:dun5k466@localhost/jokes_peeper',
         execution_options={
             "isolation_level": "REPEATABLE READ"
         }
     )
+
     Base = declarative_base()
     Session = sessionmaker(bind=engine)
     Session.configure(bind=engine)
@@ -130,8 +121,8 @@ if __name__ == '__main__':
     # print(user)
     user = session.query(User).all()
     print(user)
-    # word = session.query(Word).filter_by(word='попа', chat_id=chat_id_3).first()
-    # print(word)
+    word = session.query(Word).filter_by(word='говно', chat_id=chat_id_1).first()
+    print(word)
     # session.delete(word)
     # session.commit()
     # print("word", word)
@@ -161,10 +152,10 @@ if __name__ == '__main__':
     # print("user first", user.first())
     # print("dsada", user.filter(User.words.any(word='говно')).first())
 
-    # word = Word('ципа', amount_pages=5)
-    # session.add(word)
-    # zhenya = User('567', [word])
-    # session.add(zhenya)
+    # word = Word(chat_id='999', word='ципа', amount_pages=5)
+    # user = User(chat_id='999')
+    # obj = [word, user]
+    # session.add_all(obj)
     # print("session.new", session.new)
     # session.commit()
     # session.close()

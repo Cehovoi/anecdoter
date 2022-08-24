@@ -34,6 +34,9 @@ class Cache:
             combiner = Combiner(**dic_shortener(user_cache.items(),
                                                 ('state', 'word_f')))
             combiner.run_parser()
+            user_cache['word_f'] = combiner.jokefunc()
+            self._cache[uid] = user_cache
+            return
         cache_word = user_cache.get('word')
         if not cache_word:
             # create or read db record
@@ -52,6 +55,8 @@ class Cache:
         user_cache['word_f'] = combiner.jokefunc()
         self._cache[uid] = user_cache
 
+    def set_user_grade(self, uid):
+        pass
     def last_user_word(self, uid):
         user_cache = self.get_user_cache(uid)
         if not user_cache.get('last_word'):
@@ -79,12 +84,11 @@ class Cache:
                 joke = self.last_user_word_function(uid)
             else:
                 user_cache['page_num'] = 1
-                warning = END_WARNING
                 self._set_user_word(uid, word=user_cache['word'],
                                     user_cache=user_cache)
                 # recursion!
                 joke = self.last_user_word_function(uid)
-                joke = warning + '\n' + joke
+                joke = END_WARNING + '\n' + joke
         return joke
 
     def update_state(self, uid, state):
@@ -93,7 +97,7 @@ class Cache:
         user_cache = self.get_user_cache(uid)
         user_cache['state'] = state
         print("user_cache", user_cache)
-        #self._cache[uid]['state'] = state
+        # self._cache[uid]['state'] = state
 
 
 cache = Cache()

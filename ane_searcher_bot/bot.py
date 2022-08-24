@@ -1,3 +1,4 @@
+from .consts import GRADE
 from .fsm import FSM
 import transitions
 
@@ -23,10 +24,13 @@ class Bot:
         try:
             state = state['state']
             if state.state == 'word':
-                print("state word\n"*5)
+                print("message", message)
                 state.store_word(message, client_id)
                 self.storage._set_user_word(client_id, message)
                 state.trigger('search_word_for_get_joke')
+            # if state.state == 'telling' and GRADE in message:
+            #     self.storage._set_user_grade(client_id, message)
+            #     state.trigger('rate_the_joke')
             else:
                 state.trigger(message)
             self.storage.update_state(client_id, state)

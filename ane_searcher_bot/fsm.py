@@ -2,7 +2,7 @@ import transitions
 
 from ane_searcher_bot.parser import a_joke
 from .cache import cache
-from .consts import DOES_NOT_EXISTS
+from .consts import DOES_NOT_EXISTS, RATING
 from .contoller import Combiner
 
 
@@ -47,12 +47,19 @@ class FSM(object):
                 'dest': 'start',
 
             },
+            # {
+            #     'trigger': '1',
+            #     'source': 'telling',
+            #     'dest': 'telling',
+            #     'after': 'nexter',
+            #
+            # },
         ]
 
         self.dialogs = {
             'start': '{swear}Рассказать анекдот?',
             'word': 'Давай тему: слово или фраза',
-            'telling': '\nЕщё {word} (не забудь оценить этот)?',
+            'telling': '\nЕщё {word}?\n'+RATING,
 
         }
         self.machine = transitions.Machine(

@@ -3,6 +3,7 @@ import os
 import click
 import telebot
 from ane_searcher_bot import Bot as AneBot, create_app
+from ane_searcher_bot.consts import RATING, GRADE
 from flask.cli import FlaskGroup
 
 @click.group()
@@ -12,11 +13,11 @@ def cli():
 
 def add_button():
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = telebot.types.KeyboardButton("★")
-    btn2 = telebot.types.KeyboardButton("★★")
-    btn3 = telebot.types.KeyboardButton("★★★")
-    btn4 = telebot.types.KeyboardButton("★★★★")
-    btn5 = telebot.types.KeyboardButton("★★★★★")
+    btn1 = telebot.types.KeyboardButton(GRADE)
+    btn2 = telebot.types.KeyboardButton(GRADE*2)
+    btn3 = telebot.types.KeyboardButton(GRADE*3)
+    btn4 = telebot.types.KeyboardButton(GRADE*4)
+    btn5 = telebot.types.KeyboardButton(GRADE*5)
     markup.add(btn1, btn2, btn3, btn4, btn5)
     return markup
 # Anecdoter
@@ -35,17 +36,12 @@ def bot(token):
                 offset = message.update_id + 1
                 response = ane_bot.handle(message.message.chat.id,
                                           message.message.text)
-                print('response', response, 'response')
-
-                # btn1 = telebot.types.KeyboardButton("👋 Поздороваться")
-                # btn2 = telebot.types.KeyboardButton("❓ Задать вопрос")
-                if response.endswith('(не забудь оценить этот)?'):
+                if response.endswith(RATING):
                     markup = add_button()
                 else:
                     markup = None
                 bot.send_message(message.message.chat.id, response,
                                  reply_markup=markup)
-                #bot.send_message(message.message.chat.id, response)
             except Exception as e:
                 pass
 

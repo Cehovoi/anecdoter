@@ -71,7 +71,7 @@ class Combiner:
                     self.save(word, db)
                     return
                 user = User(chat_id=self.uid)
-                self.save([word, user],db, multi=True)
+                self.save([word, user], db, multi=True)
 
     @staticmethod
     def save(obj, db, multi=False):

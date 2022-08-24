@@ -5,10 +5,11 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_admin import Admin
-import click
-import telebot
+from flask_migrate import Migrate
+
 
 db = SQLAlchemy()
+migrate = Migrate()
 admin = Admin()
 login = LoginManager()
 login.session_protection = 'strong'
@@ -16,15 +17,17 @@ login.login_view = 'auth.login'
 folder = os.path.dirname(os.path.abspath(__file__)) + '/static'
 
 
-
 def create_app():
-    app = Flask(__name__)
-    app.config.from_object(os.getenv('FLASK_ENV'))
-    # app.config.from_object('config.DevelopmentConfig')
+    #app = Flask(__name__) # ane_searcher_bot
+    app = Flask('ane_searcher_bot')
+    print("__name__.split('.')[0]", __name__.split('.')[0])
+    # app.config.from_object(os.getenv('FLASK_ENV'))
+    app.config.from_object('config.DevelopmentConfig')
     db.init_app(app)
+    migrate.init_app(app, db)
     admin.init_app(app)
     login.init_app(app)
-    from .blue_app import blue as main_blueprint
+    from . blue_app import blue as main_blueprint
     from . auth import auth as auth_blueprint
 
     app.register_blueprint(main_blueprint)
