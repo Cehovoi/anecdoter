@@ -24,12 +24,10 @@ class Bot:
         try:
             state = state['state']
             if state.state == 'word':
-                print("message", message)
                 state.store_word(message, client_id)
                 self.storage.set_user_word(client_id, message)
                 state.trigger('search_word_for_get_joke')
             elif state.state == 'telling' and GRADE in message:
-                print("MESSSSAAAAAAAGE", message)
                 self.storage.set_user_grade(client_id, message)
                 state.trigger('rate_the_joke')
             else:

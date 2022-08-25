@@ -27,7 +27,7 @@ class Combiner:
         from ane_searcher_bot import db
         from .models import User, Word
         word = db.session.query(Word).filter_by(chat_id=self.uid,
-                                             word=self.word).first()
+                                                word=self.word).first()
         if change_word:
             # user want another theme, save current theme for parser to db
             page_num, joke_index, amount_pages = \
@@ -46,7 +46,7 @@ class Combiner:
             word.page_num = page_num
             word.joke_index = joke_index
             word.amount_pages = amount_pages
-            self.save(word, db)
+            self.save([word], db)
 
         else:
             if word:
@@ -65,23 +65,19 @@ class Combiner:
                             chat_id=self.uid)
                 user = db.session.query(User).filter_by(chat_id=self.uid).first()
                 if user:
-                    self.save(word, db)
+                    self.save([word], db)
                     return
                 user = User(chat_id=self.uid)
-                self.save([word, user], db, multi=True)
+                self.save([word, user], db)
 
     @staticmethod
-    def save(obj, db, multi=False):
-        if multi:
-            db.session.add_all(obj)
-        else:
-            db.session.add(obj)
+    def save(obj, db):
+        db.session.add_all(obj)
         db.session.commit()
         db.session.close()
 
     @lru_cache
     def jokefunc(self):
-        from ane_searcher_bot.models import RatedJokes
         for joke in self.jokes:
             yield joke.text
 

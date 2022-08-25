@@ -206,9 +206,6 @@ if __name__ == '__main__':
     # session.query(Book).options(load_only(Book.summary, Book.excerpt))
     from sqlalchemy.orm import load_only
     jokes = session.query(RatedJokes).filter_by(grade=3).options(load_only(RatedJokes.position))
-    # print('jokes', jokes)
-    # stack_jokes = [joke.position + 1 for joke in jokes]
-    # print('stack_jokes', stack_jokes)
     stack_jokes = []
     for joke in jokes:
         joke.position += 1

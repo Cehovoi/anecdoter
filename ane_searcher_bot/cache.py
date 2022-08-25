@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from ane_searcher_bot.consts import SIZE_OF_CASH, END_WARNING, DOES_NOT_EXISTS, \
+from ane_searcher_bot.consts import SIZE_OF_CASH, END_WARNING, \
     NEEDLESS_KEYS
 from ane_searcher_bot.contoller import Combiner, RatingFill
 from ane_searcher_bot.tools import dic_shortener
@@ -11,6 +11,9 @@ class Cache:
         self._cache = OrderedDict()
 
     def get_user_cache(self, uid):
+        """
+            Create, find and push to db user cache when SIZE_OF_CASH full.
+        """
         if uid not in self._cache:
             self._cache[uid] = {}
         if len(self._cache) == SIZE_OF_CASH:
@@ -26,7 +29,8 @@ class Cache:
 
     def _set_user_word(self, uid, word=None, user_cache=None):
         """
-          Setting user word for example
+          Fill user cache.
+          Create Combiner instance for parsing and save to db.
         """
         if not user_cache:
             user_cache = self.get_user_cache(uid)
@@ -59,15 +63,16 @@ class Cache:
 
     def set_user_grade(self, uid, message):
         user_cache = self.get_user_cache(uid)
-        print("def set_user_grade(self, uid): user_cache, message",
-              user_cache, message)
         rating = RatingFill(word=user_cache['word'],
                             joke=user_cache['joke'],
                             grade=len(message))
         rating.update_db()
 
-
     def last_user_word_function(self, uid):
+        """
+            Run joke generator.
+            Create new user_cache and recall himself when generator is over.
+         """
         user_cache = self.get_user_cache(uid)
         if not user_cache['jokes_len']:
             return
@@ -95,10 +100,8 @@ class Cache:
         return joke
 
     def update_state(self, uid, state):
-        print('update_state(self, uid, state)')
         user_cache = self.get_user_cache(uid)
         user_cache['state'] = state
-        print("user_cache", user_cache)
 
 
 cache = Cache()
