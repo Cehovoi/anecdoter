@@ -1,9 +1,6 @@
 from functools import lru_cache
-
+from sqlalchemy.orm import load_only
 from ane_searcher_bot.parser import get_jokes
-
-
-
 
 
 class Combiner:
@@ -84,5 +81,44 @@ class Combiner:
 
     @lru_cache
     def jokefunc(self):
+        from ane_searcher_bot.models import RatedJokes
         for joke in self.jokes:
             yield joke.text
+
+
+class RatingFill:
+
+    def __init__(self, word, joke, grade):
+        self.word = word
+        self.joke = joke
+        self.grade = grade
+
+    def update_db(self):
+        from ane_searcher_bot import create_app
+        create_app().app_context().push()
+        from ane_searcher_bot import db
+        from .models import RatedJokes
+        jokes = db.session.query(RatedJokes).filter_by(
+            grade=self.grade).options(load_only(RatedJokes.position))
+        stack_jokes = []
+        for joke in jokes:
+            joke.position += 1
+            if joke.position >= 10:
+                self.delete(joke, db)
+                continue
+            stack_jokes.append(joke)
+
+        joke = RatedJokes(word=self.word, joke=self.joke, grade=self.grade)
+        stack_jokes.append(joke)
+        self.save(stack_jokes, db)
+
+    @staticmethod
+    def save(obj, db):
+        db.session.add_all(obj)
+        db.session.commit()
+        db.session.close()
+
+    @staticmethod
+    def delete(obj, db):
+        db.session.delete(obj)
+        db.session.commit()

@@ -65,8 +65,9 @@ class RatedJokes(db.Model):
     __tablename__ = 'rated_jokes'
     id = db.Column(db.Integer, primary_key=True)
     word = db.Column(db.String(128))
-    joke = db.Column(db.String(1024), nullable=False)
+    joke = db.Column(db.Text(), nullable=False)
     grade = db.Column(db.Integer, default=1)
+    position = db.Column(db.Integer, default=1)
 
     def __init__(self, joke, grade, word):
         self.word = word
@@ -139,8 +140,8 @@ if __name__ == '__main__':
     # user = session.query(User).all()
     # print(user)
     #word = session.query(Word).filter_by(word='говно', chat_id=chat_id_1).first()
-    words = session.query(Word).all()
-    print(words)
+    # words = session.query(Word).all()
+    # print(words)
 
     # l = []
     # for word in words:
@@ -202,3 +203,24 @@ if __name__ == '__main__':
     # u = session.query(User).filter_by(chat_id='567').first()
     # print('u', u)
     # w = session.query(Word).filter_by(word='пипа').first()
+    # session.query(Book).options(load_only(Book.summary, Book.excerpt))
+    from sqlalchemy.orm import load_only
+    jokes = session.query(RatedJokes).filter_by(grade=3).options(load_only(RatedJokes.position))
+    # print('jokes', jokes)
+    # stack_jokes = [joke.position + 1 for joke in jokes]
+    # print('stack_jokes', stack_jokes)
+    stack_jokes = []
+    for joke in jokes:
+        joke.position += 1
+        if joke.position == 7:
+            print('BEFORE DELETE')
+            session.add(joke)
+            session.delete(joke)
+            session.commit()
+            print('jokes', jokes)
+            continue
+        stack_jokes.append(joke)
+
+    # session.add_all(stack_jokes)
+    # session.commit()
+    # session.close()
