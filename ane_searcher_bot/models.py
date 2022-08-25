@@ -3,7 +3,6 @@ from flask_login import UserMixin, current_user, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_admin.contrib.sqla import ModelView
 from ane_searcher_bot import db, admin, login
-from ane_searcher_bot.consts import SITE_ANECDOT
 
 
 class User(db.Model):
@@ -43,7 +42,6 @@ class Word(db.Model):
     __tablename__ = 'words'
     id = db.Column(db.Integer, primary_key=True)
     word = db.Column(db.String(128))
-    site = db.Column(db.String(128), default=SITE_ANECDOT)
     amount_pages = db.Column(db.Integer)
     joke_index = db.Column(db.Integer, default=1)
     page_num = db.Column(db.Integer, default=1)
@@ -63,21 +61,22 @@ class Word(db.Model):
                f'created == {self.created}\n'
 
 
-class JokeRating(db.Model):
-    __tablename__ = 'joke_rating'
+class RatedJokes(db.Model):
+    __tablename__ = 'rated_jokes'
     id = db.Column(db.Integer, primary_key=True)
-    site = db.Column(db.String(64), nullable=False)
+    word = db.Column(db.String(128))
     joke = db.Column(db.String(1024), nullable=False)
-    joke_index = db.Column(db.Integer, default=1)
-    page_num = db.Column(db.Integer, default=1)
     grade = db.Column(db.Integer, default=1)
 
-    def __init__(self, site, joke, joke_index, page_num, grade):
-        self.site = site
+    def __init__(self, joke, grade, word):
+        self.word = word
         self.joke = joke
-        self.joke_index = joke_index
-        self.page_num = page_num
         self.grade = grade
+
+    def __repr__(self):
+        return f'\nword == {self.word}\n' \
+               f'joke == {self.joke}\n'\
+               f'grade == {self.grade}\n'
 
 @login.user_loader
 def load_user(id):
@@ -141,14 +140,15 @@ if __name__ == '__main__':
     # print(user)
     #word = session.query(Word).filter_by(word='говно', chat_id=chat_id_1).first()
     words = session.query(Word).all()
-    #print(words)
-    l = []
-    for word in words:
-        word.site = SITE_ANECDOT
-        l.append(word)
-    session.add_all(l)
-    session.commit()
-    session.close()
+    print(words)
+
+    # l = []
+    # for word in words:
+    #     word.site = SITE_ANECDOT
+    #     l.append(word)
+    # session.add_all(l)
+    # session.commit()
+    # session.close()
 
     # session.delete(word)
     # session.commit()

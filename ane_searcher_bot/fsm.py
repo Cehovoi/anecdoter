@@ -8,7 +8,8 @@ class FSM(object):
         states = [
             'start',
             transitions.State('word', ignore_invalid_triggers=True),
-            'telling'
+            'telling',
+            'one_more',
         ]
         transition = [
             {
@@ -44,20 +45,35 @@ class FSM(object):
                 'dest': 'start',
 
             },
-            # {
-            #     'trigger': '1',
-            #     'source': 'telling',
-            #     'dest': 'telling',
-            #     'after': 'nexter',
-            #
-            # },
+            {
+                'trigger': 'rate_the_joke',
+                'source': 'telling',
+                'dest': 'one_more',
+                'after': 'reset',
+
+            },
+            {
+                'trigger': 'да',
+                'source': 'one_more',
+                'dest': 'telling',
+                'after': 'nexter',
+
+
+            },
+            {
+                'trigger': 'нет',
+                'source': 'one_more',
+                'before': 'reset',
+                'dest': 'start',
+
+            },
         ]
 
         self.dialogs = {
             'start': '{swear}Рассказать анекдот?',
             'word': 'Давай тему: слово или фраза',
             'telling': '\n\nЕщё {word}?\n\n' + RATING,
-
+            'one_more': 'Ещё {word}?'
         }
         self.machine = transitions.Machine(
             model=self, states=states, initial='start', transitions=transition,
@@ -69,20 +85,12 @@ class FSM(object):
         self.swear = ''
 
     def get_dialog(self):
-        print(" get_dialog self.state", self.state)
-        print("self.swear", self.swear)
-
         answer = self.dialogs[self.state].format(
             word=self.word, swear=self.swear)
         if self.joke:
             return self.joke + answer
         self.swear = ''
         return answer
-
-    # def store_word(self, event_data):
-    #     self.word = event_data.event.name
-    #     print("self.word\n"*4, self.word)
-    #     print("event_data", event_data, "event_data.event", event_data.event)
 
     def store_word(self, message, client_id):
         self.word = message
@@ -96,7 +104,6 @@ class FSM(object):
             self.state = 'start'
             return
         self.joke = joke
-
         return joke
 
     # def notify(self, _):
@@ -104,6 +111,7 @@ class FSM(object):
     #     if self.notify_method is not None:
     #         self.notify_method(self.size, self.pay_method)
 
-    def reset(self, _):
+    def reset(self, event_data):
+        if event_data.event.name != 'rate_the_joke':
+            self.swear = 'Пидора ответ.\n'
         self.joke = None
-        self.swear = 'Пидора ответ.\n'

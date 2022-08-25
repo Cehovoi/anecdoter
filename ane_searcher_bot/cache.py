@@ -21,7 +21,7 @@ class Cache:
         return self._cache[uid]
 
     def set_user_word(self, uid, word=None):
-        pass
+        self._set_user_word(uid, word)
 
     def _set_user_word(self, uid, word=None, user_cache=None):
         """
@@ -55,15 +55,9 @@ class Cache:
         user_cache['word_f'] = combiner.jokefunc()
         self._cache[uid] = user_cache
 
-    def set_user_grade(self, uid):
-        pass
-    def last_user_word(self, uid):
+    def set_user_grade(self, uid, message):
         user_cache = self.get_user_cache(uid)
-        if not user_cache.get('last_word'):
-            # TODO: Here should be request to DB to get user's last word
-            # for now it is a mock
-            user_cache['last_word'] = 'жопа'
-        return user_cache['last_word']
+        print("def set_user_grade(self, uid):    user_cache", user_cache)
 
     def last_user_word_function(self, uid):
         user_cache = self.get_user_cache(uid)
@@ -72,6 +66,7 @@ class Cache:
         try:
             joke = next(user_cache['word_f'])
             user_cache['joke_index'] += 1
+            #user_cache['joke'] = joke
         except StopIteration:
             # jump on new page
             user_cache['page_num'] += 1
