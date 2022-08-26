@@ -1,5 +1,7 @@
 from functools import lru_cache
 from sqlalchemy.orm import load_only
+
+from ane_searcher_bot.consts import AMOUNT_JOKES_FOR_RATING
 from ane_searcher_bot.parser import get_jokes
 
 
@@ -99,7 +101,7 @@ class RatingFill:
         stack_jokes = []
         for joke in jokes:
             joke.position += 1
-            if joke.position >= 10:
+            if joke.position >= AMOUNT_JOKES_FOR_RATING+1:
                 self.delete(joke, db)
                 continue
             stack_jokes.append(joke)
@@ -118,3 +120,4 @@ class RatingFill:
     def delete(obj, db):
         db.session.delete(obj)
         db.session.commit()
+

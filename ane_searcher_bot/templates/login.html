@@ -1,4 +1,5 @@
 <link rel='stylesheet' href="{{ url_for('static', filename='style.css', _external=True) }}" >
+<body>
 <div class="container">
     <div class="row">
         <div class="col-lg-3 col-md-2"></div>
@@ -10,19 +11,20 @@
                 ADMIN PANEL
             </div>
             <div class="col-lg-12 login-title">
-                <a href="/rating/5" style="text-decoration:none; ">RATING</a>
+                <a href="{{ url_for('main.rating', page = 5, chat_id=id)}}">RATING</a>
             </div>
 
             <div class="col-lg-12 login-form">
                 <div class="col-lg-12 login-form">
-                    <form>
+                    <form method="post">
                         <div class="form-group">
                             <label class="form-control-label">USERNAME</label>
-                            <input type="text" class="form-control">
+
+                            <input type="text" name="username" class="form-control">
                         </div>
                         <div class="form-group">
                             <label class="form-control-label">PASSWORD</label>
-                            <input type="password" class="form-control" i>
+                            <input type="password" name="password" class="form-control">
                         </div>
 
                         <div class="col-lg-12 loginbttm">
@@ -30,7 +32,10 @@
                                 <!-- Error Message -->
                             </div>
                             <div class="col-lg-6 login-btm login-button">
-                                <button type="submit" class="btn btn-outline-primary">LOGIN</button>
+                                <input type="submit" class="btn btn-outline-primary" value="LOGIN">
+                            </div>
+                            <div class="col-lg-6 login-btm login-button">
+                                <input type="submit" name="reg" class="btn btn-outline-primary" value="REG">
                             </div>
                         </div>
                     </form>
@@ -39,3 +44,5 @@
             <div class="col-lg-3 col-md-2"></div>
         </div>
     </div>
+
+</body>

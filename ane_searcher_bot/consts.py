@@ -15,3 +15,5 @@ RATING = 'Только сначала нажми на кнопку и оцени
 GRADE = '★'
 
 NEEDLESS_KEYS = ('state', 'word_f', 'joke')
+
+AMOUNT_JOKES_FOR_RATING = 9

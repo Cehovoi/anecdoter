@@ -137,7 +137,7 @@ label {
     color:#D1462C;
     text-decoration:none;
 }
-#joke_rating {
+.joke_rating {
     color:#D1462C;
-
+    text-decoration:none;
 }

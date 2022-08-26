@@ -5,13 +5,13 @@ from flask_admin.contrib.sqla import ModelView
 from ane_searcher_bot import db, admin, login
 
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     chat_id = db.Column(db.Integer, unique=True)
     words = db.relationship('Word')
     username = db.Column(db.String(64), nullable=True, unique=True)
-    password = db.Column(db.String(64), nullable=True)
+    role = db.Column(db.String(64), default='user')
     password_hash = db.Column(db.String(512), nullable=True)
     created_on = db.Column(db.DateTime, default=datetime.utcnow)
     updated_on = db.Column(db.DateTime, default=datetime.utcnow,
@@ -77,7 +77,8 @@ class RatedJokes(db.Model):
     def __repr__(self):
         return f'\nword == {self.word}\n' \
                f'joke == {self.joke}\n'\
-               f'grade == {self.grade}\n'
+               f'grade == {self.grade}\n' \
+               f'position == {self.position}\n'
 
 @login.user_loader
 def load_user(id):
@@ -85,9 +86,15 @@ def load_user(id):
 
 
 class MyModelView(ModelView):
-    can_delete = True
 
+    # can_delete = True
+    # can_create = False
+    # can_edit = False
     def is_accessible(self):
+        if current_user.role != 'admin':
+            MyModelView.can_create = False
+            MyModelView.can_edit = False
+            MyModelView.can_delete = False
         return current_user.is_authenticated
 
 
@@ -135,44 +142,8 @@ if __name__ == '__main__':
     chat_id_1 = 540439923
     chat_id_2 = 123
     chat_id_3 = 321
-    # user = session.query(User).filter_by(chat_id=chat_id_2).first()
-    # print(user)
-    user = session.query(User).all()
-    print(user)
     #word = session.query(Word).filter_by(word='говно', chat_id=chat_id_1).first()
     # words = session.query(Word).all()
-    # print(words)
-
-    # l = []
-    # for word in words:
-    #     word.site = SITE_ANECDOT
-    #     l.append(word)
-    # session.add_all(l)
-    # session.commit()
-    # session.close()
-
-    # session.delete(word)
-    # session.commit()
-    # print("word", word)
-    #
-    #
-    # word = session.query(Word).filter_by(word='говно', chat_id=chat_id_2).first()
-    # print(word)
-    # word.page_num = 1
-    # word.joke_index = 11
-    # session.add(word)
-    # session.commit()
-    # session.close()
-    # session.delete(word)
-    # session.commit()
-    # session.close()
-
-    # word.joke_index = 5
-    # word.page_num=2
-    # session.add(word)
-    # session.commit()
-    # session.close()
-
     # user = session.query(User).filter(User.words.any(word='говно')).filter(User(chat_id=540439923)).all()
     # user = session.query(User).filter(User.words.any(word='говно'), User(chat_id=540439923))
     # user.filter_by(chat_id=540439923).all()
@@ -222,3 +193,8 @@ if __name__ == '__main__':
     # session.add_all(stack_jokes)
     # session.commit()
     # session.close()
+
+    user = session.query(User).filter_by(chat_id=999).first()
+    user.set_password = '123'
+    print('user.password', user.password)
+    print('user.password_hash', user.password_hash)
