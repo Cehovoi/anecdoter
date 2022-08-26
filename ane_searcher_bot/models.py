@@ -137,8 +137,8 @@ if __name__ == '__main__':
     chat_id_3 = 321
     # user = session.query(User).filter_by(chat_id=chat_id_2).first()
     # print(user)
-    # user = session.query(User).all()
-    # print(user)
+    user = session.query(User).all()
+    print(user)
     #word = session.query(Word).filter_by(word='говно', chat_id=chat_id_1).first()
     # words = session.query(Word).all()
     # print(words)
@@ -204,19 +204,20 @@ if __name__ == '__main__':
     # print('u', u)
     # w = session.query(Word).filter_by(word='пипа').first()
     # session.query(Book).options(load_only(Book.summary, Book.excerpt))
-    from sqlalchemy.orm import load_only
-    jokes = session.query(RatedJokes).filter_by(grade=3).options(load_only(RatedJokes.position))
-    stack_jokes = []
-    for joke in jokes:
-        joke.position += 1
-        if joke.position == 7:
-            print('BEFORE DELETE')
-            session.add(joke)
-            session.delete(joke)
-            session.commit()
-            print('jokes', jokes)
-            continue
-        stack_jokes.append(joke)
+
+    # from sqlalchemy.orm import load_only
+    # jokes = session.query(RatedJokes).filter_by(grade=3).options(load_only(RatedJokes.position))
+    # stack_jokes = []
+    # for joke in jokes:
+    #     joke.position += 1
+    #     if joke.position == 7:
+    #         print('BEFORE DELETE')
+    #         session.add(joke)
+    #         session.delete(joke)
+    #         session.commit()
+    #         print('jokes', jokes)
+    #         continue
+    #     stack_jokes.append(joke)
 
     # session.add_all(stack_jokes)
     # session.commit()

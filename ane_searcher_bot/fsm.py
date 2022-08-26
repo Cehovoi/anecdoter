@@ -46,7 +46,7 @@ class FSM(object):
 
             },
             {
-                'trigger': 'rate_the_joke',
+                'trigger': 'rate_the_joke', # todo ignored
                 'source': 'telling',
                 'dest': 'one_more',
                 'after': 'reset',

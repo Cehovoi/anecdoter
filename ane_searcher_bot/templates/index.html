@@ -1,11 +1,44 @@
-{% extends 'admin/master.html' %}
-{% block body %}
-<h1> {{comment}} </h1>
-<p><a href='/login' class='btn btn-success'>Log in</a></p>
-<p><a href='/start' class='btn btn-success'>Start page</a></p>
-<p><a href='/logout' class='btn btn-success'>Logout and Start page</a></p>
+<!DOCTYPE html>
+<html lang="eng">
+<head>
+  <meta charset="utf-8">
+  <meta name="Zhenya_Vo" content="SitePoint">
 
-<h3 style="color:DarkOrange;">For authenticated admin</h3>
-<p><a href='/oc_fill' class='btn btn-danger'>Add default to Collector and Occasions from inner txt files</a></p
-<p><a href='/ex_fill' class='btn btn-danger'>Create some fake Exhibits</a></p>
-{% endblock body %}
+<link rel='stylesheet' href="{{ url_for('static', filename='style.css', _external=True) }}" >
+
+
+</head>
+<body>
+        <div class="joke_text">
+            {% for joke in jokes %}
+                <h1 id="joke_rating">
+                    {%if rating == 1 %}
+                        <a href="/rating/5" class="nav_button"><   </a>
+                    {% else %}
+                        <a href="/rating/{{rating-1}}" class="nav_button"><   </a>
+                    {% endif %}
+                    {% if rating == 0 %}
+                        <a href="/newspaper" class="nav_button"> {{joke[2]}} </a>
+                    {% endif %}
+                    {% if rating < 0 %}
+                        <a href="/newspaper" class="nav_button"> {{stars}} </a>
+                    {% endif %}
+                    {% if rating == 5 %}
+                        <a href="/rating/1" class="nav_button">   ></a>
+                    {% endif %}
+                    {% if rating > 5 %}
+                        <a href="/rating/{{rating+1}}" class="nav_button">   ></a>
+                    {% endif %}
+                </h1>
+
+                <h4><p><a href="/login" class="nav_button">{{joke[1]}}</a></p></h4>
+                <h4><p>{{joke[0]}}</p></h4>
+
+            {% endfor %}
+        </div>
+
+
+
+</body>
+
+</html>

@@ -125,3 +125,19 @@ label {
 .loginbttm {
     padding: 0px;
 }
+
+.joke_text {
+    background-color: transparent;
+    text-align: center;
+    color: #d9bfc1;
+    margin-left: 30px;
+    margin-right: 30px;
+}
+.nav_button {
+    color:#D1462C;
+    text-decoration:none;
+}
+#joke_rating {
+    color:#D1462C;
+
+}

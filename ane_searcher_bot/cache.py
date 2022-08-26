@@ -75,6 +75,8 @@ class Cache:
          """
         user_cache = self.get_user_cache(uid)
         if not user_cache['jokes_len']:
+            # by the word bot doesn`t find any joke, clear the user cache
+            self._cache[uid] = {}
             return
         try:
             joke = next(user_cache['word_f'])
