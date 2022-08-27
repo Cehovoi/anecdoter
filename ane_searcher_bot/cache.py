@@ -63,6 +63,7 @@ class Cache:
 
     def set_user_grade(self, uid, message):
         user_cache = self.get_user_cache(uid)
+
         rating = RatingFill(word=user_cache['word'],
                             joke=user_cache['joke'],
                             grade=len(message))

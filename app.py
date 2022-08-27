@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-import os
 import click
 import telebot
 from ane_searcher_bot import Bot as AneBot, create_app
 from ane_searcher_bot.consts import RATING, GRADE
-from flask.cli import FlaskGroup
+
 
 @click.group()
 def cli():
     pass
 
 
-def add_button():
+def add_rating_button():
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = telebot.types.KeyboardButton(GRADE)
     btn2 = telebot.types.KeyboardButton(GRADE*2)
@@ -20,6 +19,16 @@ def add_button():
     btn5 = telebot.types.KeyboardButton(GRADE*5)
     markup.add(btn1, btn2, btn3, btn4, btn5)
     return markup
+
+
+def add_confirm_button():
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = telebot.types.KeyboardButton('ДА')
+    btn2 = telebot.types.KeyboardButton('НЕТ')
+    markup.add(btn1, btn2)
+    return markup
+
+
 # Anecdoter
 # anecdot_searcher_bot
 # run with this
@@ -37,7 +46,9 @@ def bot(token):
                 response = ane_bot.handle(message.message.chat.id,
                                           message.message.text)
                 if response.endswith(RATING):
-                    markup = add_button()
+                    markup = add_rating_button()
+                elif response.endswith('?'):
+                    markup = add_confirm_button()
                 else:
                     markup = None
                 bot.send_message(message.message.chat.id, response,
@@ -47,6 +58,7 @@ def bot(token):
 
 app = create_app()
 
+
 @cli.command()
 def web():
     app.run(debug=True)
@@ -54,6 +66,4 @@ def web():
 
 if __name__ == '__main__':
     cli()
-    # app = create_app()
-    #app.run(debug=True)
-    #main()
+

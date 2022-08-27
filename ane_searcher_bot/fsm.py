@@ -1,10 +1,11 @@
 import transitions
 from .cache import cache
-from .consts import DOES_NOT_EXISTS, RATING
+from .consts import DOES_NOT_EXISTS, RATING, SEARCH_TRIGGER, RATE_TRIGGER, \
+    BLOCK_TRIGGER, SITE, INVITATION
 
 
 class FSM(object):
-    def __init__(self, notify_method=None):
+    def __init__(self):
         states = [
             'start',
             transitions.State('word', ignore_invalid_triggers=True),
@@ -25,7 +26,13 @@ class FSM(object):
                 'dest': 'start',
             },
             {
-                'trigger': 'search_word_for_get_joke',  # ignored
+                'trigger': BLOCK_TRIGGER,
+                'source': 'word',
+                'after': 'reset',
+                'dest': 'word',
+            },
+            {
+                'trigger': SEARCH_TRIGGER,  # ignored
                 'source': 'word',
                 'dest': 'telling',
                 'after': 'nexter',
@@ -46,7 +53,7 @@ class FSM(object):
 
             },
             {
-                'trigger': 'rate_the_joke', # todo ignored
+                'trigger': RATE_TRIGGER,
                 'source': 'telling',
                 'dest': 'one_more',
                 'after': 'reset',
@@ -80,7 +87,6 @@ class FSM(object):
             send_event=True
         )
         self.word = None
-        # self.notify_method = notify_method
         self.joke = None
         self.swear = ''
 
@@ -106,12 +112,14 @@ class FSM(object):
         self.joke = joke
         return joke
 
-    # def notify(self, _):
-    #     print("self.notify_method ", self.notify_method)
-    #     if self.notify_method is not None:
-    #         self.notify_method(self.size, self.pay_method)
-
     def reset(self, event_data):
-        if event_data.event.name != 'rate_the_joke':
+        print("dir(self)", dir(self))
+        print("self.word", self.word)
+        if event_data.event.name == BLOCK_TRIGGER:
+            self.joke = BLOCK_TRIGGER + '\n'
+        if event_data.event.name == RATE_TRIGGER:
+            print('self.client_id', self.client_id)
+            self.joke = INVITATION + SITE.format(4, self.client_id) + '\n'
+        else:
             self.swear = 'Пидора ответ.\n'
-        self.joke = None
+            self.joke = None

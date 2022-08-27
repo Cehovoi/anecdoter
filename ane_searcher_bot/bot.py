@@ -1,4 +1,4 @@
-from .consts import GRADE
+from .consts import GRADE, SEARCH_TRIGGER, RATE_TRIGGER, BLOCK_TRIGGER
 from .fsm import FSM
 import transitions
 
@@ -11,25 +11,25 @@ class Bot:
         self.fsm = fsm
         self.storage = storage
 
-    def notify(self, word):
-        print(f" joking word'{word}'")
-
     def handle(self, client_id, message):
         state = self.storage.get_user_cache(client_id)
         message = string_formatter(message)
         if not state:
-            state = self.fsm(notify_method=self.notify)
+            state = self.fsm()
             self.storage.update_state(client_id, state)
             return state.get_dialog()
         try:
             state = state['state']
             if state.state == 'word':
-                state.store_word(message, client_id)
-                self.storage.set_user_word(client_id, message)
-                state.trigger('search_word_for_get_joke')
+                if message == 'да' or message == 'нет':
+                    state.trigger(BLOCK_TRIGGER)
+                else:
+                    state.store_word(message, client_id)
+                    self.storage.set_user_word(client_id, message)
+                    state.trigger(SEARCH_TRIGGER)
             elif state.state == 'telling' and GRADE in message:
                 self.storage.set_user_grade(client_id, message)
-                state.trigger('rate_the_joke')
+                state.trigger(RATE_TRIGGER)
             else:
                 state.trigger(message)
             self.storage.update_state(client_id, state)
