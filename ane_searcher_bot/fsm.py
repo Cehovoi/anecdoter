@@ -1,11 +1,14 @@
 import transitions
 from .cache import cache
-from .consts import DOES_NOT_EXISTS, RATING, SEARCH_TRIGGER, RATE_TRIGGER, \
-    BLOCK_TRIGGER, SITE, INVITATION
+from .consts import DOES_NOT_EXISTS, RATING, SEARCH_TRIGGER, \
+    BLOCK_TRIGGER, SITE, INVITATION, GRADE
 
 
 class FSM(object):
     def __init__(self):
+        self.word = None
+        self.joke = None
+        self.swear = ''
         states = [
             'start',
             transitions.State('word', ignore_invalid_triggers=True),
@@ -53,7 +56,7 @@ class FSM(object):
 
             },
             {
-                'trigger': RATE_TRIGGER,
+                'trigger': GRADE,
                 'source': 'telling',
                 'dest': 'one_more',
                 'after': 'reset',
@@ -75,7 +78,6 @@ class FSM(object):
 
             },
         ]
-
         self.dialogs = {
             'start': '{swear}Рассказать анекдот?',
             'word': 'Давай тему: слово или фраза',
@@ -86,14 +88,12 @@ class FSM(object):
             model=self, states=states, initial='start', transitions=transition,
             send_event=True
         )
-        self.word = None
-        self.joke = None
-        self.swear = ''
 
     def get_dialog(self):
         answer = self.dialogs[self.state].format(
             word=self.word, swear=self.swear)
         if self.joke:
+
             return self.joke + answer
         self.swear = ''
         return answer
@@ -101,6 +101,9 @@ class FSM(object):
     def store_word(self, message, client_id):
         self.word = message
         self.client_id = client_id
+
+    def store_rate(self, message):
+        self.rate = message
 
     def nexter(self, _):
         joke = cache.last_user_word_function(self.client_id)
@@ -113,13 +116,12 @@ class FSM(object):
         return joke
 
     def reset(self, event_data):
-        print("dir(self)", dir(self))
-        print("self.word", self.word)
         if event_data.event.name == BLOCK_TRIGGER:
             self.joke = BLOCK_TRIGGER + '\n'
-        if event_data.event.name == RATE_TRIGGER:
-            print('self.client_id', self.client_id)
-            self.joke = INVITATION + SITE.format(4, self.client_id) + '\n'
-        else:
-            self.swear = 'Пидора ответ.\n'
-            self.joke = None
+            return
+        if event_data.event.name == GRADE:
+            self.joke = INVITATION + SITE.format(len(self.rate),
+                                                 self.client_id) + '\n'
+            return
+        self.swear = 'Пидора ответ.\n'
+        self.joke = None

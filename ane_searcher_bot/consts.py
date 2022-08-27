@@ -1,4 +1,4 @@
-SIZE_OF_CASH = 4
+SIZE_OF_CASH = 10
 
 # mode=phrase # search exact phrase
 # mode=all # occurrence all words in phrase
@@ -22,10 +22,12 @@ SEARCH_TRIGGER = 'search_word_for_get_joke'
 
 BLOCK_TRIGGER = 'ДА и НЕТ в данном случае не уместны'
 
-RATE_TRIGGER = 'или оценить эту шутку(кнопки со звездочками)'
+
 
 SITE = 'http://127.0.0.1:5000/rating/{}/{}'
 
 INVITATION = 'Спасибо за контент, анекдот добавлен на сайт, ' \
              'зайди и посмотри анекдоты с ' \
              'таким же рейтингом.\n'
+
+

@@ -1,6 +1,5 @@
-from .consts import GRADE, SEARCH_TRIGGER, RATE_TRIGGER, BLOCK_TRIGGER
+from .consts import GRADE, SEARCH_TRIGGER, BLOCK_TRIGGER
 from .fsm import FSM
-import transitions
 
 from .cache import cache
 from .tools import string_formatter
@@ -29,7 +28,8 @@ class Bot:
                     state.trigger(SEARCH_TRIGGER)
             elif state.state == 'telling' and GRADE in message:
                 self.storage.set_user_grade(client_id, message)
-                state.trigger(RATE_TRIGGER)
+                state.store_rate(message)
+                state.trigger(GRADE)
             else:
                 state.trigger(message)
             self.storage.update_state(client_id, state)
