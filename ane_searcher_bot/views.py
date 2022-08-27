@@ -28,43 +28,45 @@ def create_db():
 
 @blue.route('/login/<int:chat_id>', methods=['POST', 'GET'])
 def login(chat_id):
-    print("@app.route('/login', methods=['POST', 'GET'])\n")
-    print("request.method", request.method)
-
     if request.method == 'POST':
         username = request.form.get('username', None)
         password = request.form.get('password', None)
-        reg_button = request.form.get('reg', None)
-        user = db.session.query(User).filter_by(username=username,
-                                                chat_id=chat_id).first()
-        if not user and reg_button:
-            print("chat_id", chat_id)
+        reg_button = request.form.get('REG', None)
+        if reg_button:
             user = db.session.query(User).filter_by(chat_id=chat_id).first()
-            if not user:
-                # to fail.html
-                print("СХОДИКА в ТЕЛЕГРАМ")
             user.username = username
             user.set_password = password
             try:
                 db.session.add(user)
                 db.session.commit()
-                db.session.close()
-            except IntegrityError as e:
+
+            except IntegrityError:
                 return render_template('fail.html',
                                        id=chat_id,
                                        message='USERNAME ALREADY TAKEN')
             login_user(user)
+            db.session.close()
             return redirect(url_for('admin.index'))
 
+        user = db.session.query(User).filter_by(username=username).first()
         if user and user.check_password(password):
+
             login_user(user)
             return redirect(url_for('admin.index'))
         else:
-            print('before fail\n'*10)
             return render_template('fail.html',
                                    id=chat_id,
-                                   message='WRONG PASSWORD')
-    return render_template('login.html', id=chat_id)
+                                   message='WRONG LOGIN OR PASSWORD')
+    user = db.session.query(User).filter_by(chat_id=chat_id).first()
+    if not user:
+        return render_template('fail.html',
+                               id=chat_id,
+                               message='GO to TELEGRAM')
+    if user.username:
+        button = 'LOGIN'
+    else:
+        button = 'REG'
+    return render_template('login.html', id=chat_id, button=button)
 
 @blue.route('/logout')
 def logout():
