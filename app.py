@@ -29,10 +29,6 @@ def add_confirm_button():
     return markup
 
 
-# Anecdoter
-# anecdot_searcher_bot
-# run with this
-# TOKEN='5421705848:AAEU3KtJpVKUM07Mi3AT_iwoEd4LMJuR260' python app.py
 @cli.command()
 @click.option('--token', envvar="TOKEN", help='Telegram Token')
 def bot(token):
@@ -55,6 +51,7 @@ def bot(token):
                                  reply_markup=markup)
             except Exception as e:
                 pass
+
 
 app = create_app()
 

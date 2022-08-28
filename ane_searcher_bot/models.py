@@ -80,16 +80,13 @@ class RatedJokes(db.Model):
                f'grade == {self.grade}\n' \
                f'position == {self.position}\n'
 
+
 @login.user_loader
 def load_user(id):
     return db.session.query(User).get(id)  # Owner.query.get(id)
 
 
 class MyModelView(ModelView):
-
-    # can_delete = True
-    # can_create = False
-    # can_edit = False
     def is_accessible(self):
         if current_user.role != 'admin':
             MyModelView.can_create = False
@@ -103,98 +100,6 @@ admin.add_view(MyModelView(Word, db.session))
 
 
 def recreate_database():
-    # Base.metadata.drop_all(engine)
-    # Base.metadata.create_all(engine)
     db.drop_all()
     db.create_all()
 
-
-
-
-
-if __name__ == '__main__':
-    from sqlalchemy import create_engine
-    from sqlalchemy.ext.declarative import declarative_base
-    from sqlalchemy.orm import sessionmaker, relationship
-    # engine = create_engine(
-    #     "postgresql://zhenya:123@localhost/test_tg",
-    #     execution_options={
-    #         "isolation_level": "REPEATABLE READ"
-    #     }
-    # )
-    engine = create_engine(
-        'postgresql://zhenyavo:dun5k466@localhost/jokes_peeper',
-        execution_options={
-            "isolation_level": "REPEATABLE READ"
-        }
-    )
-
-    Base = declarative_base()
-    Session = sessionmaker(bind=engine)
-    Session.configure(bind=engine)
-    session = Session()
-
-    # Base.query = session.query_property()
-    # db.create_all()
-    #recreate_database()
-    # Base.metadata.create_all(engine)
-
-    chat_id_1 = 540439923
-    chat_id_2 = 123
-    chat_id_3 = 321
-    #word = session.query(Word).filter_by(word='говно', chat_id=chat_id_1).first()
-    # words = session.query(Word).all()
-    # user = session.query(User).filter(User.words.any(word='говно')).filter(User(chat_id=540439923)).all()
-    # user = session.query(User).filter(User.words.any(word='говно'), User(chat_id=540439923))
-    # user.filter_by(chat_id=540439923).all()
-    # user = session.query(User).filter_by(chat_id=540439923)
-    # print("user first", user.first())
-    # print("dsada", user.filter(User.words.any(word='говно')).first())
-
-    # word = Word(chat_id='999', word='ципа', amount_pages=5)
-    # user = User(chat_id='999')
-    # obj = [word, user]
-    # session.add_all(obj)
-    # print("session.new", session.new)
-    # session.commit()
-    # session.close()
-    #
-    # w = session.query(Word).all()
-    # u = session.query(User).all()
-    # print('w', w,  '\nu', u)
-
-    # u = session.query(User).filter_by(chat_id='567').first()
-    # word2 = Word('пипа', 1, 1, 5)
-    # u.word.append(word2)
-    # print("u", u)
-    # print("session.new", session.new)
-    # session.commit()
-    # session.close()
-
-    # u = session.query(User).filter_by(chat_id='567').first()
-    # print('u', u)
-    # w = session.query(Word).filter_by(word='пипа').first()
-    # session.query(Book).options(load_only(Book.summary, Book.excerpt))
-
-    # from sqlalchemy.orm import load_only
-    # jokes = session.query(RatedJokes).filter_by(grade=3).options(load_only(RatedJokes.position))
-    # stack_jokes = []
-    # for joke in jokes:
-    #     joke.position += 1
-    #     if joke.position == 7:
-    #         print('BEFORE DELETE')
-    #         session.add(joke)
-    #         session.delete(joke)
-    #         session.commit()
-    #         print('jokes', jokes)
-    #         continue
-    #     stack_jokes.append(joke)
-
-    # session.add_all(stack_jokes)
-    # session.commit()
-    # session.close()
-
-    user = session.query(User).filter_by(chat_id=999).first()
-    user.set_password = '123'
-    print('user.password', user.password)
-    print('user.password_hash', user.password_hash)

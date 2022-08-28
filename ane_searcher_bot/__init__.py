@@ -18,10 +18,10 @@ folder = os.path.dirname(os.path.abspath(__file__)) + '/static'
 
 
 def create_app():
-    #app = Flask(__name__) # ane_searcher_bot,  __name__.split('.')[0]
-    app = Flask('ane_searcher_bot')
-    # app.config.from_object(os.getenv('FLASK_ENV'))
-    app.config.from_object('config.DevelopmentConfig')
+    app = Flask(__name__)
+    # app = Flask('ane_searcher_bot')
+    app.config.from_object(os.getenv('FLASK_ENV'))
+    # app.config.from_object('config.DevelopmentConfig')
     db.init_app(app)
     migrate.init_app(app, db)
     admin.init_app(app)
