@@ -15,4 +15,4 @@ class DevelopmentConfig(BaseConfig):
 
 class ProductionConfig(BaseConfig):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = f"postgresql://{os.environ.get('LOGIN')}:{os.environ.get('PASSWORD')}@ec2-54-228-125-183.eu-west-1.compute.amazonaws.com:5432/d10n1vfon6661g"
+    SQLALCHEMY_DATABASE_URI = f"{os.environ.get('DATABASE_URL')}".replace('postgres', 'postgresql')
