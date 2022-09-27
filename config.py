@@ -10,7 +10,7 @@ class BaseConfig:
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://zhenyavo:dun5k466@localhost/jokes_peeper'
+    SQLALCHEMY_DATABASE_URI = f"{os.environ.get('DATABASE_URL')}"
 
 
 class ProductionConfig(BaseConfig):
