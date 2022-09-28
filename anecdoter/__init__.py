@@ -19,7 +19,7 @@ folder = os.path.dirname(os.path.abspath(__file__)) + '/static'
 
 def create_app():
     app = Flask(__name__)
-    # app = Flask('ane_searcher_bot')
+    # app = Flask('anecdoter')
     app.config.from_object(os.getenv('FLASK_ENV'))
     # app.config.from_object('config.DevelopmentConfig')
     db.init_app(app)

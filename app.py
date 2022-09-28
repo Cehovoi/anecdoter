@@ -3,8 +3,8 @@ import os
 
 import click
 import telebot
-from ane_searcher_bot import Bot as AneBot, create_app
-from ane_searcher_bot.consts import RATING, GRADE
+from anecdoter import Bot as AneBot, create_app
+from anecdoter.consts import RATING, GRADE
 TOKEN = os.environ.get('TOKEN')
 
 @click.group()

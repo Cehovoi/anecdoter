@@ -1,0 +1,32 @@
+services:
+ web:
+  build: .
+  depends_on:
+   - db
+  command: python starter.py run --host='0.0.0.0'
+  ports:
+  - "5000:5000"
+  volumes:
+  - .:/app
+  - ./anecdoter:/app/anecdoter
+  environment:
+   - FLASK_APP=anecdoter
+   - FLASK_ENV=${TAG}
+   - FLASK_DEBUG=${TAG2}
+
+ db:
+  image: postgres
+  ports:
+  - 3306:3306
+  environment:
+  - POSTGRES_PASSWORD=root
+
+#  volumes:
+#  - mysql:/var/lib/mysql
+#  - mysql_config:/etc/mysql
+#  cap_add:
+#  - SYS_NICE
+#
+#volumes:
+#  mysql:
+#  mysql_config:

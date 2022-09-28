@@ -2,7 +2,7 @@ from datetime import datetime
 from flask_login import UserMixin, current_user, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_admin.contrib.sqla import ModelView
-from ane_searcher_bot import db, admin, login
+from anecdoter import db, admin, login
 
 
 class User(db.Model, UserMixin):

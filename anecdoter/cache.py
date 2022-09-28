@@ -1,9 +1,9 @@
 from collections import OrderedDict
 
-from ane_searcher_bot.consts import SIZE_OF_CASH, END_WARNING, \
+from anecdoter.consts import SIZE_OF_CASH, END_WARNING, \
     NEEDLESS_KEYS
-from ane_searcher_bot.contoller import Combiner, RatingFill
-from ane_searcher_bot.tools import dic_shortener
+from anecdoter.contoller import Combiner, RatingFill
+from anecdoter.tools import dic_shortener
 
 
 class Cache:

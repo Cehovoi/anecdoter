@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 from urllib.parse import urljoin
 
-from ane_searcher_bot.consts import PHRASE_URL, WORD_URL
+from anecdoter.consts import PHRASE_URL, WORD_URL
 
 
 def get_url(word, page=1):

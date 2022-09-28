@@ -1,8 +1,8 @@
 from functools import lru_cache
 from sqlalchemy.orm import load_only
 
-from ane_searcher_bot.consts import AMOUNT_JOKES_FOR_RATING
-from ane_searcher_bot.parser import get_jokes
+from anecdoter.consts import AMOUNT_JOKES_FOR_RATING
+from anecdoter.parser import get_jokes
 
 
 class Combiner:
@@ -24,9 +24,9 @@ class Combiner:
         self.jokes = jokes[self.joke_index:]
 
     def sync_db(self, change_word=False):
-        from ane_searcher_bot import create_app
+        from anecdoter import create_app
         create_app().app_context().push()
-        from ane_searcher_bot import db
+        from anecdoter import db
         from .models import User, Word
         word = db.session.query(Word).filter_by(chat_id=self.uid,
                                                 word=self.word).first()
@@ -92,9 +92,9 @@ class RatingFill:
         self.grade = grade
 
     def update_db(self):
-        from ane_searcher_bot import create_app
+        from anecdoter import create_app
         create_app().app_context().push()
-        from ane_searcher_bot import db
+        from anecdoter import db
         from .models import RatedJokes
         jokes = db.session.query(RatedJokes).filter_by(
             grade=self.grade).options(load_only(RatedJokes.position))

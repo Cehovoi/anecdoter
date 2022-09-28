@@ -2,7 +2,7 @@ from flask import render_template, redirect, request, url_for
 from flask_login import login_user, logout_user, current_user
 from sqlalchemy.exc import IntegrityError
 
-from ane_searcher_bot import db
+from anecdoter import db
 from .blue_app import blue
 from .consts import GRADE, AMOUNT_JOKES_FOR_RATING
 from .models import User, RatedJokes
@@ -61,7 +61,10 @@ def login(chat_id):
     if not user:
         return render_template('fail.html',
                                id=chat_id,
-                               message='GO to TELEGRAM')
+                               message='Admin panel only for those '
+                                       'who use the bot.'
+                                       'Go to telegram and get your chat id!'
+                                       'Push to go back to rating jokes')
     if user.username:
         button = 'LOGIN'
     else:
