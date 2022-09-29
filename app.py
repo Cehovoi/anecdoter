@@ -3,9 +3,9 @@ import os
 
 import click
 import telebot
-from anecdoter import Bot as AneBot, create_app
+from anecdoter import Bot as AneBot, create_app, db
 from anecdoter.consts import RATING, GRADE
-TOKEN = os.environ.get('TOKEN')
+
 
 @click.group()
 def cli():
@@ -59,8 +59,18 @@ app = create_app()
 
 
 @cli.command()
-def web():
-    app.run(debug=True)
+@click.option('--host', envvar="HOST", help='host')
+def web(host):
+    if not host:
+        host = '0.0.0.0'
+    app.run(debug=True, host=host)
+
+
+@cli.command("create_db")
+def create_db():
+    db.drop_all()
+    db.create_all()
+    db.session.commit()
 
 
 if __name__ == '__main__':

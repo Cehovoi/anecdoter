@@ -1,25 +1,50 @@
 services:
+
  web:
   build: .
   depends_on:
    - db
-  command: python starter.py run --host='0.0.0.0'
+  command: python app.py web
   ports:
   - "5000:5000"
   volumes:
   - .:/app
   - ./anecdoter:/app/anecdoter
-  environment:
-   - FLASK_APP=anecdoter
-   - FLASK_ENV=${TAG}
-   - FLASK_DEBUG=${TAG2}
+  env_file:
+   - ./.env
+
+ bot:
+  build: .
+  depends_on:
+   - db
+  command: python app.py bot
+  volumes:
+   - .:/app
+   - ./anecdoter:/app/anecdoter
+  env_file:
+   - ./.env
 
  db:
   image: postgres
-  ports:
-  - 3306:3306
+  volumes:
+   - postgres_data:/var/lib/postgresql/data/
   environment:
-  - POSTGRES_PASSWORD=root
+    - POSTGRES_USER=root
+    - POSTGRES_PASSWORD=pass
+    - POSTGRES_DB=anecdoter_db
+
+volumes:
+  postgres_data:
+
+#  volumes:
+#  - postgres:/var/lib/postgres
+#  - postgres_config:/etc/postgres
+#  cap_add:
+#  - SYS_NICE
+#
+#volumes:
+#  postgres:
+#  postgres_config:
 
 #  volumes:
 #  - mysql:/var/lib/mysql

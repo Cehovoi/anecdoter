@@ -22,6 +22,7 @@ def rating(page, chat_id):
 
 @blue.route('/create_db')
 def create_db():
+    db.drop_all()
     db.create_all()
     return 'db.create_all()'
 

@@ -10,9 +10,9 @@ class BaseConfig:
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = f"{os.environ.get('DATABASE_URL')}"
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
 
 
 class ProductionConfig(BaseConfig):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = f"{os.environ.get('DATABASE_URL')}".replace('postgres', 'postgresql')
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
