@@ -29,23 +29,3 @@ services:
 
 volumes:
   postgres_data:
-
-#  volumes:
-#  - postgres:/var/lib/postgres
-#  - postgres_config:/etc/postgres
-#  cap_add:
-#  - SYS_NICE
-#
-#volumes:
-#  postgres:
-#  postgres_config:
-
-#  volumes:
-#  - mysql:/var/lib/mysql
-#  - mysql_config:/etc/mysql
-#  cap_add:
-#  - SYS_NICE
-#
-#volumes:
-#  mysql:
-#  mysql_config:

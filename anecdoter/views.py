@@ -20,6 +20,21 @@ def rating(page, chat_id):
                            jokes=jokes)
 
 
+@blue.route("/static/<path:filename>")
+def staticfiles(filename):
+    print("def staticfiles(filename):\n"*10)
+    from flask import send_from_directory
+    import app
+    return send_from_directory(app.config["STATIC_FOLDER"], filename)
+
+
+
+@blue.route("/s")
+def s():
+    print("def staticfiles(filename):\n"*10)
+    return "IN SSSSS"
+
+
 @blue.route('/create_db')
 def create_db():
     db.drop_all()
