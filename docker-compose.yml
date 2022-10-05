@@ -6,10 +6,7 @@ services:
    - db
   command: python app.py web
   ports:
-  - "5000:5000"
-  volumes:
-  - .:/app
-  - ./anecdoter:/app/anecdoter
+   - "5000:5000"
   env_file:
    - ./.env
 
@@ -18,9 +15,6 @@ services:
   depends_on:
    - db
   command: python app.py bot
-  volumes:
-   - .:/app
-   - ./anecdoter:/app/anecdoter
   env_file:
    - ./.env
 

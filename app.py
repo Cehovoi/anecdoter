@@ -63,14 +63,17 @@ app = create_app()
 def web(host):
     if not host:
         host = '0.0.0.0'
-    app.run(debug=True, host=host)
+    app.run(host=host)
 
 
 @cli.command("create_db")
 def create_db():
-    db.drop_all()
-    db.create_all()
-    db.session.commit()
+    with app.app_context():
+        from anecdoter import db
+        print("db", db)
+        db.drop_all()
+        db.create_all()
+        db.session.commit()
 
 
 if __name__ == '__main__':

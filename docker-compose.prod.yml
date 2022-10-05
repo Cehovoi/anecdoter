@@ -1,0 +1,45 @@
+services:
+
+ web:
+  build:
+   context: ./
+   dockerfile: Dockerfile.prod
+  depends_on:
+   - db
+  command: gunicorn --bind 0.0.0.0:5000 app:app web
+  expose:
+   - 5000
+  env_file:
+   - ./.env
+
+ nginx:
+  build: ./nginx
+  volumes:
+   - static_volume:/home/app/static
+  ports:
+   - 1337:80
+  depends_on:
+   - web
+
+ bot:
+  build:
+   context: ./
+   dockerfile: Dockerfile.prod
+  depends_on:
+   - db
+  command: gunicorn app:app bot
+  env_file:
+   - ./.env
+
+ db:
+  image: postgres
+  volumes:
+   - postgres_data:/var/lib/postgresql/data/
+  environment:
+    - POSTGRES_USER=root
+    - POSTGRES_PASSWORD=pass
+    - POSTGRES_DB=anecdoter_db
+
+volumes:
+  postgres_data:
+  static_volume:

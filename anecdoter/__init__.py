@@ -19,10 +19,8 @@ folder = os.path.dirname(os.path.abspath(__file__)) + '/static'
 
 def create_app():
     app = Flask(__name__)
-    # app = Flask('anecdoter')
-
-    #app.config.from_object(os.getenv('FLASK_ENV'))
-    app.config.from_object('config.DevelopmentConfig')
+    app.config.from_object(os.getenv('CONFIG'))
+    print("os.getenv('CONFIG')", os.getenv('CONFIG'))
     db.init_app(app)
     migrate.init_app(app, db)
     admin.init_app(app)
