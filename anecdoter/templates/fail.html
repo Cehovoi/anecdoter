@@ -1,4 +1,8 @@
 <link rel='stylesheet' href="{{ url_for('static', filename='style.css', _external=True) }}" >
 <body style="background: #222D32;">
-	<center><h1><a href="{{ url_for('main.rating', page = 5, chat_id=id)}}" class='nav_button '>{{message}}</a></h1></center>
+	<h1><a href="{{ url_for('main.rating', page = 5, chat_id=id)}}" class='nav_button '>
+		{% for string in message.split('.') %}
+			<center>{{string}} </center>
+		{% endfor %}
+	</a></h1>
 </body>

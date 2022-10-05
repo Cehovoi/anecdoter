@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 from anecdoter import db
 from .blue_app import blue
-from .consts import GRADE, AMOUNT_JOKES_FOR_RATING
+from .consts import GRADE, AMOUNT_JOKES_FOR_RATING, LOGIN_ERROR
 from .models import User, RatedJokes
 
 
@@ -18,28 +18,6 @@ def rating(page, chat_id):
                            id=chat_id,
                            stars=stars,
                            jokes=jokes)
-
-
-@blue.route("/static/<path:filename>")
-def staticfiles(filename):
-    print("def staticfiles(filename):\n"*10)
-    from flask import send_from_directory
-    import app
-    return send_from_directory(app.config["STATIC_FOLDER"], filename)
-
-
-
-@blue.route("/s")
-def s():
-    print("def staticfiles(filename):\n"*10)
-    return "IN SSSSS"
-
-
-@blue.route('/create_db')
-def create_db():
-    db.drop_all()
-    db.create_all()
-    return 'db.create_all()'
 
 
 @blue.route('/login/<int:chat_id>', methods=['POST', 'GET'])
@@ -77,15 +55,13 @@ def login(chat_id):
     if not user:
         return render_template('fail.html',
                                id=chat_id,
-                               message='Admin panel only for those '
-                                       'who use the bot.'
-                                       'Go to telegram and get your chat id!'
-                                       'Push to go back to rating jokes')
+                               message=LOGIN_ERROR)
     if user.username:
         button = 'LOGIN'
     else:
         button = 'REG'
     return render_template('login.html', id=chat_id, button=button)
+
 
 @blue.route('/logout')
 def logout():

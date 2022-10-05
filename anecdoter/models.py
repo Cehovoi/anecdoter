@@ -83,7 +83,7 @@ class RatedJokes(db.Model):
 
 @login.user_loader
 def load_user(id):
-    return db.session.query(User).get(id)  # Owner.query.get(id)
+    return db.session.query(User).get(id)
 
 
 class MyModelView(ModelView):

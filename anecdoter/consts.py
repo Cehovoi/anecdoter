@@ -31,3 +31,7 @@ INVITATION = 'Спасибо за контент, анекдот добавле�
              'таким же рейтингом.\n'
 
 
+LOGIN_ERROR = 'Admin panel only for those ' \
+               'who use the bot.' \
+               'Go to telegram and get your chat id.' \
+               'Click on text to go back to rating jokes'
