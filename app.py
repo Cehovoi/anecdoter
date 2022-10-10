@@ -7,28 +7,36 @@ from anecdoter import Bot as AneBot, create_app, db
 from anecdoter.consts import RATING, GRADE
 
 
-@click.group()
-def cli():
-    pass
+def button(value):
+    return telebot.types.KeyboardButton(value)
+
+
+def collect_grades():
+    return tuple(button(GRADE*num) for num in range(1, 6))
+
+
+def collect_confirms():
+    return tuple(button(word) for word in ('ДА', 'НЕТ'))
 
 
 def add_rating_button():
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = telebot.types.KeyboardButton(GRADE)
-    btn2 = telebot.types.KeyboardButton(GRADE*2)
-    btn3 = telebot.types.KeyboardButton(GRADE*3)
-    btn4 = telebot.types.KeyboardButton(GRADE*4)
-    btn5 = telebot.types.KeyboardButton(GRADE*5)
-    markup.add(btn1, btn2, btn3, btn4, btn5)
+    grade_buttons = collect_grades()
+    markup.row(*grade_buttons[:3])
+    markup.row(*grade_buttons[-2:])
+    markup.row(*collect_confirms())
     return markup
 
 
 def add_confirm_button():
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = telebot.types.KeyboardButton('ДА')
-    btn2 = telebot.types.KeyboardButton('НЕТ')
-    markup.add(btn1, btn2)
+    markup.add(*collect_confirms())
     return markup
+
+
+@click.group()
+def cli():
+    pass
 
 
 @cli.command()
