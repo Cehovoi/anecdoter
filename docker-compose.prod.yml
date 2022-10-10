@@ -30,7 +30,7 @@ services:
    dockerfile: Dockerfile.prod
   depends_on:
    - db
-  command: gunicorn app:app bot
+  command: python app.py bot
   env_file:
    - ./.env
 
