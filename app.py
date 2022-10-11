@@ -11,26 +11,22 @@ def button(value):
     return telebot.types.KeyboardButton(value)
 
 
-def collect_grades():
-    return tuple(button(GRADE*num) for num in range(1, 6))
-
-
-def collect_confirms():
-    return tuple(button(word) for word in ('ДА', 'НЕТ'))
+def collect_buttons(content, sequence):
+    return tuple(button(content * i) for i in sequence)
 
 
 def add_rating_button():
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    grade_buttons = collect_grades()
+    grade_buttons = collect_buttons(GRADE, range(1, 6))
     markup.row(*grade_buttons[:3])
     markup.row(*grade_buttons[-2:])
-    markup.row(*collect_confirms())
+    markup.row(*collect_buttons(1, ('ДА', 'НЕТ')))
     return markup
 
 
 def add_confirm_button():
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add(*collect_confirms())
+    markup.add(*collect_buttons(1, ('ДА', 'НЕТ')))
     return markup
 
 
