@@ -24,7 +24,8 @@ BLOCK_TRIGGER = 'ДА и НЕТ в данном случае не уместны
 
 
 
-SITE = 'https://anecdoter-web.herokuapp.com/rating/{}/{}'
+# SITE = 'https://anecdoter-web.herokuapp.com/rating/{}/{}'
+SITE = 'anecdoter.su/rating/{}/{}'
 
 INVITATION = 'Спасибо за контент, анекдот добавлен на сайт, ' \
              'зайди и посмотри анекдоты с ' \

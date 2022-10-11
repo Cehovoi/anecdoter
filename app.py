@@ -45,6 +45,8 @@ def bot(token):
     bot = telebot.TeleBot(token, parse_mode=None)
     ane_bot = AneBot()
     offset = None
+    rating_buttons = add_rating_button()
+    confirm_buttons = add_confirm_button()
     while True:
         for message in bot.get_updates(offset=offset):
             try:
@@ -52,9 +54,9 @@ def bot(token):
                 response = ane_bot.handle(message.message.chat.id,
                                           message.message.text)
                 if response.endswith(RATING):
-                    markup = add_rating_button()
+                    markup = rating_buttons
                 elif response.endswith('?'):
-                    markup = add_confirm_button()
+                    markup = confirm_buttons
                 else:
                     markup = None
                 bot.send_message(message.message.chat.id, response,
