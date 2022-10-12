@@ -19,7 +19,8 @@ services:
   volumes:
    - static_volume:/home/app/web/anecdoter/static
   ports:
-   - 1337:80
+   - 80:80
+   - 443:443
   depends_on:
    - web
   restart: "always"
