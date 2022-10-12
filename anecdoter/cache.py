@@ -98,7 +98,7 @@ class Cache:
                                     user_cache=user_cache)
                 # recursion!
                 joke = self.last_user_word_function(uid)
-                joke = END_WARNING + '\n' + joke
+                joke = END_WARNING + '\n' + '\n' + joke
         user_cache['joke'] = joke
         return joke
 
