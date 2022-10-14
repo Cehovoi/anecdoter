@@ -69,7 +69,6 @@ app = create_app()
 def web(host):
     if not host:
         host = '0.0.0.0'
-    app.secret_key = 'super secret key'
     app.run(host=host)
 
 
