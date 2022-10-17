@@ -156,7 +156,7 @@ span.horizontal-shake {
 
 span.rise-shake {
   animation: jump-shaking 10s infinite;
-  animation-delay: 8s;
+  animation-delay: 2s;
 }
 
 
@@ -173,12 +173,12 @@ span.rise-shake {
 
 @keyframes jump-shaking {
   0% { transform: translateX(0) }
-  2% { transform: translateY(-9px) }
-  4% { transform: translateY(-9px) rotate(17deg) }
-  6% { transform: translateY(-9px) rotate(-17deg) }
-  8% { transform: translateY(-9px) rotate(17deg) }
-  10% { transform: translateY(-9px) rotate(-17deg) }
-  14% { transform: translateY(9px) }
-  25% { transform: translateY(0) rotate(0) }
+  1% { transform: translateY(-9px) }
+  2% { transform: translateY(-9px) rotate(17deg) }
+  3% { transform: translateY(-9px) rotate(-17deg) }
+  5% { transform: translateY(-9px) rotate(17deg) }
+  7% { transform: translateY(-9px) rotate(-17deg) }
+  10% { transform: translateY(9px) }
+  20% { transform: translateY(0) rotate(0) }
   100% { transform: translateY(0) rotate(0) }
 }
