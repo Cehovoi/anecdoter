@@ -38,13 +38,13 @@ def cli():
 @cli.command()
 @click.option('--token', envvar="TOKEN", help='Telegram Token')
 def bot(token):
-    bot = telebot.TeleBot(token, parse_mode=None)
+    tele_bot = telebot.TeleBot(token, parse_mode=None)
     ane_bot = AneBot()
     offset = None
     rating_buttons = add_rating_button()
     confirm_buttons = add_confirm_button()
     while True:
-        for message in bot.get_updates(offset=offset):
+        for message in tele_bot.get_updates(offset=offset):
             try:
                 offset = message.update_id + 1
                 response = ane_bot.handle(message.message.chat.id,
@@ -55,10 +55,12 @@ def bot(token):
                     markup = confirm_buttons
                 else:
                     markup = None
-                bot.send_message(message.message.chat.id, response,
+                tele_bot.send_message(message.message.chat.id, response,
                                  reply_markup=markup)
             except Exception as e:
-                pass
+                print('Bot crashed, error - ', e)
+                # restart bot
+                bot(token)
 
 
 app = create_app()
