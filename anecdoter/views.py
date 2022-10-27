@@ -68,3 +68,4 @@ def logout():
     chat_id = current_user.chat_id
     logout_user()
     return redirect(f'/rating/1/{chat_id}')
+
