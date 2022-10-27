@@ -69,3 +69,13 @@ def logout():
     logout_user()
     return redirect(f'/rating/1/{chat_id}')
 
+
+@blue.route('/webhook', methods=['POST'])
+def webhook_runner():
+    from anecdoter.bot import TeleConnector
+    while True:
+        if request.headers.get('content-type') == 'application/json':
+            json_string = request.get_data().decode('utf-8')
+            #return request.get_data().decode('utf-8')
+            TeleConnector.run(json_hook=json_string)
+
