@@ -17,12 +17,23 @@ class Cache:
         if uid not in self._cache:
             self._cache[uid] = {}
         if len(self._cache) == SIZE_OF_CASH:
-            first = self._cache.popitem(last=False)
-            user_cache = first[1]
-            combiner = Combiner(**dic_shortener(user_cache.items(),
-                                                NEEDLESS_KEYS))
-            combiner.sync_db(change_word=True)
+            user_cache = self._cache.popitem(last=False)
+            self._drop_cache_to_db(user_cache[1])
         return self._cache[uid]
+
+    def drop_all_cache_to_db(self):
+        users_cache = self._cache
+        if not users_cache:
+            return 'Nothing_to_drop_cache_is_empty'
+        for num, user_cache in enumerate(users_cache.values()):
+            self._drop_cache_to_db(user_cache)
+        return f'Dropped_cache_of_{num}_users'
+
+    @staticmethod
+    def _drop_cache_to_db(user_cache):
+        combiner = Combiner(**dic_shortener(user_cache.items(),
+                                            NEEDLESS_KEYS))
+        combiner.sync_db(change_word=True)
 
     def set_user_word(self, uid, word):
         self._set_user_word(uid, word)

@@ -87,6 +87,12 @@ def load_user(id):
 
 
 class MyModelView(ModelView):
+    """
+        Flask Admin settings
+    """
+    column_exclude_list = ['password_hash', ]
+    column_searchable_list = ['chat_id']
+
     def is_accessible(self):
         if current_user.role != 'admin':
             MyModelView.can_create = False
