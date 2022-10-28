@@ -67,6 +67,30 @@ def cli():
 #                 # restart bot
 #                 bot(token)
 
+@cli.command()
+@click.option('--token', envvar="TOKEN", help='Telegram Token')
+@click.option('--admin_id', envvar="ADMIN_ID",)
+def bot(token, admin_id='0'):
+    from anecdoter.aiobot import AioBot
+    from anecdoter.aiobot import add_buttons
+    buttons = {'grades_confirm': add_buttons(all_buttons=True),
+               'confirm': add_buttons(all_buttons=False),
+               'admin_grades_confirm': add_buttons(all_buttons=True,
+                                                   admin_button=True),
+               'admin_confirm': add_buttons(all_buttons=False,
+                                            admin_button=True)
+               }
+    b = AioBot(token=token,
+               admin_id=int(admin_id),
+               web_hook_host='https://2128-176-53-210-25.eu.ngrok.io',
+               web_hook_path='/',
+               web_app_host='localhost',
+               web_app_port=8444,
+               buttons=buttons,
+               )
+    b.run_aiogram()
+
+
 
 
 
@@ -93,26 +117,26 @@ def create_db():
         db.session.commit()
 
 
-@cli.command()
-@click.option('--token', envvar="TOKEN", help='Telegram Token')
-@click.option('--admin_id', envvar="ADMIN_ID", help='admin chat id')
-def bot(token, admin_id='0'):
-    from anecdoter.bot import TeleConnector
-
-    # teleconnector = TeleConnector(token=token, admin_id=admin_id)
-    # print("teleconnector", teleconnector)
-    # teleconnector.run()
-    # create class attributes
-    WEB_HOOK_URL = 'https://4572-176-53-210-25.eu.ngrok.io'
-    TeleConnector.connector = telebot.TeleBot(token, parse_mode=None)
-    # TeleConnector.connector.remove_webhook()
-    # import time
-    # time.sleep(1)
-    # TeleConnector.connector.set_webhook(url=WEB_HOOK_URL)
-    TeleConnector.admin_id = int(admin_id)
-    from anecdoter.views import webhook_runner
-    webhook_runner()
-    #TeleConnector.run()
+# @cli.command()
+# @click.option('--token', envvar="TOKEN", help='Telegram Token')
+# @click.option('--admin_id', envvar="ADMIN_ID", help='admin chat id')
+# def bot(token, admin_id='0'):
+#     from anecdoter.bot import TeleConnector
+#
+#     # teleconnector = TeleConnector(token=token, admin_id=admin_id)
+#     # print("teleconnector", teleconnector)
+#     # teleconnector.run()
+#     # create class attributes
+#     WEB_HOOK_URL = 'https://4572-176-53-210-25.eu.ngrok.io'
+#     TeleConnector.connector = telebot.TeleBot(token, parse_mode=None)
+#     # TeleConnector.connector.remove_webhook()
+#     # import time
+#     # time.sleep(1)
+#     # TeleConnector.connector.set_webhook(url=WEB_HOOK_URL)
+#     TeleConnector.admin_id = int(admin_id)
+#     from anecdoter.views import webhook_runner
+#     webhook_runner()
+#     #TeleConnector.run()
 
 
 if __name__ == '__main__':

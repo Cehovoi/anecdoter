@@ -44,6 +44,10 @@ class Bot:
         return answer
 
 
+
+
+
+
 class TeleConnector:
     # def __init__(self, token, admin_id):
     #     self.teleconnector = telebot.TeleBot(token, parse_mode=None)
@@ -92,5 +96,6 @@ class TeleConnector:
         # while command != 'stop':
         #     command = input('enter the message: ')
         #     TeleConnector.connector.process_new_updates([command])
+
 
 
