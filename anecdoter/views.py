@@ -2,7 +2,7 @@ from flask import render_template, redirect, request, url_for
 from flask_login import login_user, logout_user, current_user
 from sqlalchemy.exc import IntegrityError
 
-from anecdoter import db
+from anecdoter.web_app import db
 from .blue_app import blue
 from .consts import GRADE, AMOUNT_JOKES_FOR_RATING, LOGIN_ERROR
 from .models import User, RatedJokes
@@ -69,13 +69,4 @@ def logout():
     logout_user()
     return redirect(f'/rating/1/{chat_id}')
 
-
-@blue.route('/webhook', methods=['POST'])
-def webhook_runner():
-    from anecdoter.bot import TeleConnector
-    while True:
-        if request.headers.get('content-type') == 'application/json':
-            json_string = request.get_data().decode('utf-8')
-            #return request.get_data().decode('utf-8')
-            TeleConnector.run(json_hook=json_string)
 

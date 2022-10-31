@@ -2,7 +2,7 @@ from datetime import datetime
 from flask_login import UserMixin, current_user, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_admin.contrib.sqla import ModelView
-from anecdoter import db, admin, login
+from anecdoter.web_app import db, admin, login
 
 
 class User(db.Model, UserMixin):
@@ -108,23 +108,3 @@ admin.add_view(MyModelView(Word, db.session))
 def recreate_database():
     db.drop_all()
     db.create_all()
-
-if __name__ == '__main__':
-    from sqlalchemy import create_engine
-    from sqlalchemy.ext.declarative import declarative_base
-    from sqlalchemy.orm import sessionmaker, relationship
-
-    DATABASE_URL = 'postgresql://zhenya:123@localhost/anecdoter_db'
-    engine = create_engine(
-        DATABASE_URL,
-        execution_options={
-            "isolation_level": "REPEATABLE READ"
-        }
-    )
-    Base = declarative_base()
-    Session = sessionmaker(bind=engine)
-    Session.configure(bind=engine)
-    session = Session()
-    print('session', session)
-    words = session.query(Word).all()
-    print(words)

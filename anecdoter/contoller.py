@@ -1,11 +1,8 @@
 from os import getenv
-from functools import lru_cache
-
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import load_only
-from anecdoter.models import Word, User, RatedJokes
+
 from anecdoter.consts import AMOUNT_JOKES_FOR_RATING
 
 from anecdoter.parser import get_jokes
@@ -13,7 +10,6 @@ from anecdoter.parser import get_jokes
 
 def db_connector():
     database_url = getenv('DATABASE_URL')
-    database_url = 'postgresql://zhenya:123@localhost/anecdoter_db'
     engine = create_engine(
         database_url,
         execution_options={
@@ -24,7 +20,6 @@ def db_connector():
     Session.configure(bind=engine)
     session = Session()
     return session
-
 
 class Combiner:
     def __init__(self, uid, word, amount_pages=0,
@@ -45,12 +40,10 @@ class Combiner:
         self.jokes = jokes[self.joke_index:]
 
     def sync_db(self, change_word=False):
-        from anecdoter import create_app
-        create_app().app_context().push()
-        from anecdoter import db
         from .models import User, Word
-        word = db.session.query(Word).filter_by(chat_id=self.uid,
-                                                word=self.word).first()
+        session = db_connector()
+        word = session.query(Word).filter_by(chat_id=self.uid,
+                                             word=self.word).first()
         if change_word:
             # user want another theme, save current theme for parser to db
             page_num, joke_index, amount_pages = \
@@ -69,7 +62,7 @@ class Combiner:
             word.page_num = page_num
             word.joke_index = joke_index
             word.amount_pages = amount_pages
-            self.save([word], db)
+            self.save([word], session)
 
         else:
             if word:
@@ -86,20 +79,19 @@ class Combiner:
                     return
                 word = Word(word=self.word, amount_pages=self.amount_pages,
                             chat_id=self.uid)
-                user = db.session.query(User).filter_by(chat_id=self.uid).first()
+                user = session.query(User).filter_by(chat_id=self.uid).first()
                 if user:
-                    self.save([word], db)
+                    self.save([word], session)
                     return
                 user = User(chat_id=self.uid)
-                self.save([word, user], db)
+                self.save([word, user], session)
 
     @staticmethod
-    def save(obj, db):
-        db.session.add_all(obj)
-        db.session.commit()
-        db.session.close()
+    def save(obj, session):
+        session.add_all(obj)
+        session.commit()
+        session.close()
 
-    @lru_cache
     def jokefunc(self):
         for joke in self.jokes:
             yield joke.text
@@ -113,40 +105,40 @@ class RatingFill:
         self.grade = grade
 
     def update_db(self):
-        from anecdoter import create_app
-        create_app().app_context().push()
-        from anecdoter import db
         from .models import RatedJokes
-        jokes = db.session.query(RatedJokes).filter_by(
+        session = db_connector()
+        jokes = session.query(RatedJokes).filter_by(
             grade=self.grade).options(load_only(RatedJokes.position))
         stack_jokes = []
         for joke in jokes:
             joke.position += 1
             if joke.position >= AMOUNT_JOKES_FOR_RATING+1:
-                self.delete(joke, db)
+                self.delete(joke, session)
                 continue
             stack_jokes.append(joke)
 
         joke = RatedJokes(word=self.word, joke=self.joke, grade=self.grade)
         stack_jokes.append(joke)
-        self.save(stack_jokes, db)
+        self.save(stack_jokes, session)
 
     @staticmethod
-    def save(obj, db):
-        db.session.add_all(obj)
-        db.session.commit()
-        db.session.close()
+    def save(obj, session):
+        session.add_all(obj)
+        session.commit()
+        session.close()
 
     @staticmethod
-    def delete(obj, db):
-        db.session.delete(obj)
-        db.session.commit()
+    def delete(obj, session):
+        session.delete(obj)
+        session.commit()
 
 
 if __name__ == '__main__':
-
+    #from anecdoter.models import Word, User, RatedJokes
     session = db_connector()
     words = session.query(Word).all()
-    print(words)
+    word = session.query(Word).filter_by(chat_id=540439923,
+                                         word='говно').first()
+    print(word)
 
 
