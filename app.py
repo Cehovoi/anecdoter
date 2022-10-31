@@ -75,14 +75,10 @@ def bot(token, admin_id='0'):
     from anecdoter.aiobot import add_buttons
     buttons = {'grades_confirm': add_buttons(all_buttons=True),
                'confirm': add_buttons(all_buttons=False),
-               'admin_grades_confirm': add_buttons(all_buttons=True,
-                                                   admin_button=True),
-               'admin_confirm': add_buttons(all_buttons=False,
-                                            admin_button=True)
                }
     b = AioBot(token=token,
                admin_id=int(admin_id),
-               web_hook_host='https://2128-176-53-210-25.eu.ngrok.io',
+               web_hook_host='https://4e8b-176-53-210-25.eu.ngrok.io',
                web_hook_path='/',
                web_app_host='localhost',
                web_app_port=8444,

@@ -1,8 +1,29 @@
+from os import getenv
 from functools import lru_cache
-from sqlalchemy.orm import load_only
 
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import load_only
+from anecdoter.models import Word, User, RatedJokes
 from anecdoter.consts import AMOUNT_JOKES_FOR_RATING
+
 from anecdoter.parser import get_jokes
+
+
+def db_connector():
+    database_url = getenv('DATABASE_URL')
+    database_url = 'postgresql://zhenya:123@localhost/anecdoter_db'
+    engine = create_engine(
+        database_url,
+        execution_options={
+            "isolation_level": "REPEATABLE READ"
+        }
+    )
+    Session = sessionmaker(bind=engine)
+    Session.configure(bind=engine)
+    session = Session()
+    return session
 
 
 class Combiner:
@@ -120,4 +141,12 @@ class RatingFill:
     def delete(obj, db):
         db.session.delete(obj)
         db.session.commit()
+
+
+if __name__ == '__main__':
+
+    session = db_connector()
+    words = session.query(Word).all()
+    print(words)
+
 

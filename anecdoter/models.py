@@ -109,3 +109,22 @@ def recreate_database():
     db.drop_all()
     db.create_all()
 
+if __name__ == '__main__':
+    from sqlalchemy import create_engine
+    from sqlalchemy.ext.declarative import declarative_base
+    from sqlalchemy.orm import sessionmaker, relationship
+
+    DATABASE_URL = 'postgresql://zhenya:123@localhost/anecdoter_db'
+    engine = create_engine(
+        DATABASE_URL,
+        execution_options={
+            "isolation_level": "REPEATABLE READ"
+        }
+    )
+    Base = declarative_base()
+    Session = sessionmaker(bind=engine)
+    Session.configure(bind=engine)
+    session = Session()
+    print('session', session)
+    words = session.query(Word).all()
+    print(words)

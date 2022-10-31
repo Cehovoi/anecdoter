@@ -20,15 +20,13 @@ def collect_buttons(content, sequence):
     return tuple(button(content * i) for i in sequence)
 
 
-def add_buttons(all_buttons=False, admin_button=False):
+def add_buttons(all_buttons=False):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     if all_buttons:
         grade_buttons = collect_buttons(GRADE, range(1, 6))
         markup.row(*grade_buttons[:3])
         markup.row(*grade_buttons[-2:])
     markup.row(*collect_buttons(1, ('ДА', 'НЕТ')))
-    if admin_button:
-        markup.row(button('Админка'))
     return markup
 
 
@@ -92,15 +90,46 @@ class AioBot:
         bot = Bot(token=self.token)
         dp = Dispatcher(bot)
         dp.middleware.setup(LoggingMiddleware())
-        # admin_cb = CallbackData()
         vote_cb = CallbackData('vote', 'action', 'amount')
+        admin_cb = CallbackData('admin', 'action')
 
-        def get_keyboard(amount):
-            return types.InlineKeyboardMarkup().row(
-                types.InlineKeyboardButton('👍', callback_data=vote_cb.new(
-                    action='up', amount=amount)),
-                types.InlineKeyboardButton('👎', callback_data=vote_cb.new(
-                    action='down', amount=amount)))
+        # def get_keyboard(amount):
+        #     return types.InlineKeyboardMarkup().row(
+        #         types.InlineKeyboardButton('👍', callback_data=vote_cb.new(
+        #             action='up', amount=amount)),
+        #         types.InlineKeyboardButton('👎', callback_data=vote_cb.new(
+        #             action='down', amount=amount)))
+
+        def get_keyboard():
+            markup = types.InlineKeyboardMarkup()
+            show_button = types.InlineKeyboardButton(
+                'Посмотреть кэш',
+                callback_data=admin_cb.new(action='show_cache')
+            )
+            sync_button = types.InlineKeyboardButton(
+                'Сбросить кэш в базу',
+                callback_data=admin_cb.new(action='sync_db')
+            )
+            stat_button = types.InlineKeyboardButton(
+                'Посмотреть статистику',
+                callback_data=admin_cb.new(action='show_stat')
+            )
+            markup.row(show_button, sync_button)
+            markup.row(stat_button)
+            return markup
+
+        @dp.message_handler(commands='start')
+        async def cmd_start(message: types.Message):
+            await message.reply('Vote! Now you have 0 votes.',
+                                reply_markup=get_keyboard(0))
+
+        @dp.message_handler(commands='admin')
+        async def cmd_admin_enter(message: types.Message):
+            if message.from_id != self.admin_id:
+                await message.reply('У тебя нет на это власти!')
+            else:
+                await message.reply('Сугубо админские кнопки',
+                                    reply_markup=get_keyboard())
 
         @dp.callback_query_handler(vote_cb.filter(action='up'))
         async def vote_up_cb_handler(query: types.CallbackQuery,
@@ -114,39 +143,35 @@ class AioBot:
                 query.message.message_id,
                 reply_markup=get_keyboard(amount))
 
-        @dp.callback_query_handler(vote_cb.filter(action='down'))
-        async def vote_down_cb_handler(query: types.CallbackQuery,
-                                       callback_data: dict):
-            amount = int(callback_data['amount'])
-            amount -= 1
+        @dp.callback_query_handler(admin_cb.filter(action='show_cache'))
+        async def admin_show_cache(query: types.CallbackQuery):
+            from .cache import cache
+            all_user_cache = cache._cache
+            cache_list = [(key,
+                          value.get('word'),
+                           ('Всего страниц', value.get('amount_pages')),
+                           ('Номер анекдота', value.get('joke_index')),
+                           ('Номер страницы', value.get('page_num')))
+                          for key, value in all_user_cache.items()]
             await bot.edit_message_text(
-                f'You voted down! Now you have {amount} votes.',
+                f'Всего народа {len(all_user_cache)}\n'
+                f'Кэшик каждого\n {cache_list}',
                 query.from_user.id,
                 query.message.message_id,
-                reply_markup=get_keyboard(amount))
-
-
+                reply_markup=get_keyboard())
 
         @dp.message_handler()
         async def conversation(message: types.Message):
             chat_id = message.chat.id
             response = self.handle(chat_id, message.text)
-            admins_chat = self.admin_id == chat_id
-            if admins_chat:
-                grades_confirm = 'admin_grades_confirm'
-                confirm = 'admin_confirm'
-            else:
-                grades_confirm = 'grades_confirm'
-                confirm = 'confirm'
             if response.endswith(RATING):
-                markup = self.buttons[grades_confirm]
-            elif response.endswith('?') or admins_chat:
-                markup = self.buttons[confirm]
+                markup = self.buttons['grades_confirm']
+            elif response.endswith('?'):
+                markup = self.buttons['confirm']
             else:
                 markup = None
-            return SendMessage(chat_id, response, reply_markup=get_keyboard(0))
-
-
+            #return SendMessage(chat_id, response, reply_markup=get_keyboard(0))
+            return SendMessage(chat_id, response, reply_markup=markup)
 
         async def on_startup(dp):
             await bot.set_webhook(web_hook_url)
