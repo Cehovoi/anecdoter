@@ -25,9 +25,12 @@ class Cache:
         users_cache = self._cache
         if not users_cache:
             return 'Nothing_to_drop_cache_is_empty'
-        for num, user_cache in enumerate(users_cache.values()):
-            self._drop_cache_to_db(user_cache)
-        return f'Dropped_cache_of_{num}_users'
+        try:
+            for num, user_cache in enumerate(users_cache.values()):
+                self._drop_cache_to_db(user_cache)
+            return f'Dropped_cache_of_{num+1}_users'
+        except Exception as e:
+            return f'Fail because {e}'
 
     @staticmethod
     def _drop_cache_to_db(user_cache):

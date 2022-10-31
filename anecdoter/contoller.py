@@ -21,6 +21,7 @@ def db_connector():
     session = Session()
     return session
 
+
 class Combiner:
     def __init__(self, uid, word, amount_pages=0,
                  joke_index=0, page_num=1, jokes_len=0):
@@ -132,13 +133,5 @@ class RatingFill:
         session.delete(obj)
         session.commit()
 
-
-if __name__ == '__main__':
-    #from anecdoter.models import Word, User, RatedJokes
-    session = db_connector()
-    words = session.query(Word).all()
-    word = session.query(Word).filter_by(chat_id=540439923,
-                                         word='говно').first()
-    print(word)
 
 

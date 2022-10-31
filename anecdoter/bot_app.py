@@ -3,10 +3,11 @@ from aiogram import Bot, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.dispatcher import Dispatcher
 from aiogram.dispatcher.webhook import SendMessage
+from aiogram.utils.exceptions import MessageNotModified
 from aiogram.utils.executor import start_webhook
 from aiogram.utils.callback_data import CallbackData
 
-from .consts import BLOCK_TRIGGER, SEARCH_TRIGGER, GRADE, RATING
+from .consts import BLOCK_TRIGGER, SEARCH_TRIGGER, GRADE, RATING, DOMAIN
 from .fsm import FSM
 from .cache import cache
 from .tools import string_formatter
@@ -90,17 +91,9 @@ class AioBot:
         bot = Bot(token=self.token)
         dp = Dispatcher(bot)
         dp.middleware.setup(LoggingMiddleware())
-        vote_cb = CallbackData('vote', 'action', 'amount')
         admin_cb = CallbackData('admin', 'action')
 
-        # def get_keyboard(amount):
-        #     return types.InlineKeyboardMarkup().row(
-        #         types.InlineKeyboardButton('👍', callback_data=vote_cb.new(
-        #             action='up', amount=amount)),
-        #         types.InlineKeyboardButton('👎', callback_data=vote_cb.new(
-        #             action='down', amount=amount)))
-
-        def get_keyboard():
+        def get_admin_keyboard():
             markup = types.InlineKeyboardMarkup()
             show_button = types.InlineKeyboardButton(
                 'Посмотреть кэш',
@@ -118,34 +111,16 @@ class AioBot:
             markup.row(stat_button)
             return markup
 
-        @dp.message_handler(commands='start')
-        async def cmd_start(message: types.Message):
-            await message.reply('Vote! Now you have 0 votes.',
-                                reply_markup=get_keyboard(0))
-
         @dp.message_handler(commands='admin')
         async def cmd_admin_enter(message: types.Message):
             if message.from_id != self.admin_id:
                 await message.reply('У тебя нет на это власти!')
             else:
                 await message.reply('Сугубо админские кнопки',
-                                    reply_markup=get_keyboard())
-
-        @dp.callback_query_handler(vote_cb.filter(action='up'))
-        async def vote_up_cb_handler(query: types.CallbackQuery,
-                                     callback_data: dict):
-            logging.info(callback_data)
-            amount = int(callback_data['amount'])
-            amount += 1
-            await bot.edit_message_text(
-                f'You voted up! Now you have {amount} votes.',
-                query.from_user.id,
-                query.message.message_id,
-                reply_markup=get_keyboard(amount))
+                                    reply_markup=get_admin_keyboard())
 
         @dp.callback_query_handler(admin_cb.filter(action='show_cache'))
         async def admin_show_cache(query: types.CallbackQuery):
-            from .cache import cache
             all_user_cache = cache._cache
             cache_list = [(key,
                           value.get('word'),
@@ -158,7 +133,30 @@ class AioBot:
                 f'Кэшик каждого\n {cache_list}',
                 query.from_user.id,
                 query.message.message_id,
-                reply_markup=get_keyboard())
+                reply_markup=get_admin_keyboard())
+
+        @dp.callback_query_handler(admin_cb.filter(action='sync_db'))
+        async def admin_sync_db(query: types.CallbackQuery):
+            status = cache.drop_all_cache_to_db()
+            await bot.edit_message_text(
+                f'Чё там база говорит? - {status}',
+                query.from_user.id,
+                query.message.message_id,
+                reply_markup=get_admin_keyboard())
+
+        @dp.callback_query_handler(admin_cb.filter(action='show_stat'))
+        async def admin_show_stat(query: types.CallbackQuery):
+            address = DOMAIN + f'/login/{query.from_user.id}'
+            await bot.edit_message_text(
+                f'Пиздуйка ты на сайт {address}',
+                query.from_user.id,
+                query.message.message_id,
+                reply_markup=get_admin_keyboard())
+
+        @dp.errors_handler(exception=MessageNotModified)
+        async def message_not_modified_handler(update, error):
+            # for skipping this exception
+            return True
 
         @dp.message_handler()
         async def conversation(message: types.Message):
@@ -170,7 +168,6 @@ class AioBot:
                 markup = self.buttons['confirm']
             else:
                 markup = None
-            #return SendMessage(chat_id, response, reply_markup=get_keyboard(0))
             return SendMessage(chat_id, response, reply_markup=markup)
 
         async def on_startup(dp):
@@ -179,13 +176,10 @@ class AioBot:
 
         async def on_shutdown(dp):
             logging.warning('Shutting down..')
-            # insert code here to run it before shutdown
+            status = cache.drop_all_cache_to_db()
             # Remove webhook (not acceptable in some cases)
             await bot.delete_webhook()
-            # Close DB connection (if used)
-            await dp.storage.close()
-            await dp.storage.wait_closed()
-            logging.warning('Bye!')
+            logging.warning(f'{status}\nBye!')
 
         start_webhook(
             dispatcher=dp,
@@ -196,4 +190,3 @@ class AioBot:
             host=self.web_app_host,
             port=self.web_app_port,
         )
-
