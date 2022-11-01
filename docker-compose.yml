@@ -15,17 +15,19 @@ services:
   depends_on:
    - db
   command: python app.py bot
+  ports:
+   - "8444:8444"
   env_file:
    - ./.env
 
  db:
   image: postgres
   volumes:
-   - postgres_data:/var/lib/postgresql/data/
+   - postgres_volume:/var/lib/postgresql/data/
   environment:
     - POSTGRES_USER=root
     - POSTGRES_PASSWORD=pass
     - POSTGRES_DB=anecdoter_db
 
 volumes:
-  postgres_data:
+  postgres_volume:

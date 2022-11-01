@@ -17,11 +17,14 @@ def bot(token, hook_host, admin_id='0', ):
     buttons = {'grades_confirm': add_buttons(all_buttons=True),
                'confirm': add_buttons(all_buttons=False),
                }
+    print("admin_id\n"*10, admin_id, type(admin_id))
+    print('hook_host', hook_host)
+
     aiobot = AioBot(token=token,
                     admin_id=int(admin_id),
                     web_hook_host=hook_host,
                     web_hook_path='/',
-                    web_app_host='localhost',
+                    web_app_host='0.0.0.0',
                     web_app_port=8444,
                     buttons=buttons,
                     )

@@ -32,6 +32,8 @@ services:
   depends_on:
    - db
   command: python app.py bot
+  expose:
+   - 8444
   env_file:
    - ./.env
 
