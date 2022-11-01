@@ -17,9 +17,6 @@ def bot(token, hook_host, admin_id='0', ):
     buttons = {'grades_confirm': add_buttons(all_buttons=True),
                'confirm': add_buttons(all_buttons=False),
                }
-    print("admin_id\n"*10, admin_id, type(admin_id))
-    print('hook_host', hook_host)
-
     aiobot = AioBot(token=token,
                     admin_id=int(admin_id),
                     web_hook_host=hook_host,
@@ -32,13 +29,10 @@ def bot(token, hook_host, admin_id='0', ):
 
 
 @cli.command()
-@click.option('--host', envvar="HOST", help='host')
-def web(host):
+def web():
     from anecdoter.web_app import create_app
     app = create_app()
-    if not host:
-        host = '0.0.0.0'
-    app.run(host=host)
+    app.run(host='0.0.0.0')
 
 
 if __name__ == '__main__':

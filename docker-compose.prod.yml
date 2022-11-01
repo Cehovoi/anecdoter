@@ -6,7 +6,7 @@ services:
    dockerfile: Dockerfile.prod
   depends_on:
    - db
-  command: gunicorn --bind 0.0.0.0:5000 app:app web
+  command: gunicorn -w 4 -b 0.0.0.0:5000 'anecdoter.web_app:create_app()' web
   volumes:
    - static_volume:/home/app/web/anecdoter/static
   expose:
@@ -40,12 +40,12 @@ services:
  db:
   image: postgres
   volumes:
-   - postgres_data:/var/lib/postgresql/data/
+   - postgres_volume:/var/lib/postgresql/data/
   environment:
     - POSTGRES_USER=root
     - POSTGRES_PASSWORD=pass
     - POSTGRES_DB=anecdoter_db
 
 volumes:
-  postgres_data:
+  postgres_volume:
   static_volume:
