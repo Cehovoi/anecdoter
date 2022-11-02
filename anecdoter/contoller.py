@@ -4,7 +4,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import load_only
 
 from anecdoter.consts import AMOUNT_JOKES_FOR_RATING
-
 from anecdoter.parser import get_jokes
 
 
@@ -20,6 +19,14 @@ def db_connector():
     Session.configure(bind=engine)
     session = Session()
     return session
+
+
+def get_admin_rights(chat_id):
+    from .models import User
+    session = db_connector()
+    user = session.query(User).filter_by(chat_id=chat_id,
+                                         role='admin').first()
+    return user
 
 
 class Combiner:

@@ -10,13 +10,21 @@ services:
   env_file:
    - ./.env
 
- bot:
+ aiobot:
   build: .
   depends_on:
    - db
-  command: python app.py bot
+  command: python app.py aiobot
   ports:
    - "8444:8444"
+  env_file:
+   - ./.env
+
+ telebot:
+  build: .
+  depends_on:
+   - db
+  command: python app.py telebot
   env_file:
    - ./.env
 

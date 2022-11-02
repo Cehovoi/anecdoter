@@ -25,15 +25,25 @@ services:
    - web
   restart: "always"
 
- bot:
+ aiobot:
   build:
    context: ./
    dockerfile: Dockerfile.prod
   depends_on:
    - db
-  command: python app.py bot
+  command: python app.py aiobot
   expose:
    - 8444
+  env_file:
+   - ./.env
+
+ telebot:
+  build:
+   context: ./
+   dockerfile: Dockerfile.prod
+  depends_on:
+   - db
+  command: python app.py telebot
   env_file:
    - ./.env
 

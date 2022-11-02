@@ -35,6 +35,7 @@ class User(db.Model, UserMixin):
         return f'\nchat_id == {self.chat_id}\n' \
                f'username == {self.username}\n' \
                f'created_on == {self.created_on}\n' \
+               f'role == {self.role}\n\n' \
                f'{"w_"*20}\nwords == {self.words}\n{"w_"*20}\n'
 
 

@@ -8,6 +8,7 @@ from aiogram.utils.executor import start_webhook
 from aiogram.utils.callback_data import CallbackData
 
 from .consts import BLOCK_TRIGGER, SEARCH_TRIGGER, GRADE, RATING, DOMAIN
+from .contoller import get_admin_rights
 from .fsm import FSM
 from .cache import cache
 from .tools import string_formatter
@@ -21,7 +22,7 @@ def collect_buttons(content, sequence):
     return tuple(button(content * i) for i in sequence)
 
 
-def add_buttons(all_buttons=False):
+def add_buttons(all_buttons=False, types=types):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     if all_buttons:
         grade_buttons = collect_buttons(GRADE, range(1, 6))
@@ -31,11 +32,10 @@ def add_buttons(all_buttons=False):
     return markup
 
 
-class AioBot:
+class AneBot:
 
     def __init__(self,
                  token,
-                 admin_id=None,
                  web_hook_host=None,
                  web_hook_path=None,
                  web_app_host=None,
@@ -44,7 +44,6 @@ class AioBot:
                  fsm=FSM,
                  storage=cache):
         self.token = token
-        self.admin_id = admin_id
         self.web_hook_host = web_hook_host
         self.web_hook_path = web_hook_path
         self.web_app_host = web_app_host
@@ -85,6 +84,23 @@ class AioBot:
         answer = state.get_dialog()
         return answer
 
+    def run_telebot(self):
+        from telebot import TeleBot
+        telebot = TeleBot(self.token, parse_mode=None)
+        offset = None
+        while True:
+            for message in telebot.get_updates(offset=offset):
+                offset = message.update_id + 1
+                chat_id = message.message.chat.id
+                response = self.handle(chat_id, message.message.text)
+                if response.endswith(RATING):
+                    markup = self.buttons['grades_confirm']
+                elif response.endswith('?'):
+                    markup = self.buttons['confirm']
+                else:
+                    markup = None
+                telebot.send_message(chat_id, response)
+
     def run_aiogram(self):
         web_hook_url = f'{self.web_hook_host}{self.web_hook_path}'
         logging.basicConfig(level=logging.INFO)
@@ -113,7 +129,8 @@ class AioBot:
 
         @dp.message_handler(commands='admin')
         async def cmd_admin_enter(message: types.Message):
-            if message.from_id != self.admin_id:
+            admin = get_admin_rights(message.from_id)
+            if not admin:
                 await message.reply('У тебя нет на это власти!')
             else:
                 await message.reply('Сугубо админские кнопки',
