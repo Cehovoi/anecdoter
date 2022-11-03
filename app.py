@@ -10,7 +10,10 @@ def cli():
 @cli.command()
 @click.option('--token', envvar="TOKEN", help='Telegram Token')
 @click.option('--hook_host', envvar="HOOK_HOST")
-def aiobot(token, hook_host):
+def aiobot(token, hook_host=None):
+    if not hook_host:
+        from anecdoter.consts import DOMAIN
+        hook_host = DOMAIN
     from anecdoter.bot_app import AioBot
     aio_bot = AioBot(token=token,
                      web_hook_host=hook_host,
