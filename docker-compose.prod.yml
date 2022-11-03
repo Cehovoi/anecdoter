@@ -32,8 +32,8 @@ services:
   depends_on:
    - db
   command: python app.py aiobot
-  expose:
-   - 8444
+  ports:
+   - "8444:8444"
   env_file:
    - ./.env
 

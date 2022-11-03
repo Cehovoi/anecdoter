@@ -14,16 +14,15 @@ from .cache import cache
 from .tools import string_formatter
 
 
-def button(value):
-    return types.KeyboardButton(value)
+def add_buttons(all_buttons=False, button_types=types):
 
+    def button(value):
+        return button_types.KeyboardButton(value)
 
-def collect_buttons(content, sequence):
-    return tuple(button(content * i) for i in sequence)
+    def collect_buttons(content, sequence):
+        return tuple(button(content * i) for i in sequence)
 
-
-def add_buttons(all_buttons=False, types=types):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup = button_types.ReplyKeyboardMarkup(resize_keyboard=True)
     if all_buttons:
         grade_buttons = collect_buttons(GRADE, range(1, 6))
         markup.row(*grade_buttons[:3])
@@ -84,22 +83,8 @@ class AneBot:
         answer = state.get_dialog()
         return answer
 
-    def run_telebot(self):
-        from telebot import TeleBot
-        telebot = TeleBot(self.token, parse_mode=None)
-        offset = None
-        while True:
-            for message in telebot.get_updates(offset=offset):
-                offset = message.update_id + 1
-                chat_id = message.message.chat.id
-                response = self.handle(chat_id, message.message.text)
-                if response.endswith(RATING):
-                    markup = self.buttons['grades_confirm']
-                elif response.endswith('?'):
-                    markup = self.buttons['confirm']
-                else:
-                    markup = None
-                telebot.send_message(chat_id, response)
+
+class AioBot(AneBot):
 
     def run_aiogram(self):
         web_hook_url = f'{self.web_hook_host}{self.web_hook_path}'
@@ -108,6 +93,9 @@ class AneBot:
         dp = Dispatcher(bot)
         dp.middleware.setup(LoggingMiddleware())
         admin_cb = CallbackData('admin', 'action')
+        self.buttons = {'grades_confirm': add_buttons(all_buttons=True),
+                        'confirm': add_buttons(all_buttons=False),
+                        }
 
         def get_admin_keyboard():
             markup = types.InlineKeyboardMarkup()
@@ -207,3 +195,28 @@ class AneBot:
             host=self.web_app_host,
             port=self.web_app_port,
         )
+
+
+class TeleBot(AneBot):
+
+    def run_telebot(self):
+        from telebot import TeleBot, types as teletypes
+        self.buttons = {'grades_confirm': add_buttons(all_buttons=True,
+                                                      button_types=teletypes),
+                        'confirm': add_buttons(all_buttons=False,
+                                               button_types=teletypes),
+                        }
+        telebot = TeleBot(self.token, parse_mode=None)
+        offset = None
+        while True:
+            for message in telebot.get_updates(offset=offset):
+                offset = message.update_id + 1
+                chat_id = message.message.chat.id
+                response = self.handle(chat_id, message.message.text)
+                if response.endswith(RATING):
+                    markup = self.buttons['grades_confirm']
+                elif response.endswith('?'):
+                    markup = self.buttons['confirm']
+                else:
+                    markup = None
+                telebot.send_message(chat_id, response, reply_markup=markup)
