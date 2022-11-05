@@ -208,6 +208,7 @@ class TeleBot(AneBot):
                         }
         telebot = TeleBot(self.token, parse_mode=None)
         offset = None
+        num = 0
         while True:
             for message in telebot.get_updates(offset=offset):
                 offset = message.update_id + 1

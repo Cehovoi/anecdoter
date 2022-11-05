@@ -28,8 +28,15 @@ def aiobot(token, hook_host=None):
 @click.option('--token_2', envvar="TOKEN_2")
 def telebot(token_2):
     from anecdoter.bot_app import TeleBot
+    from requests.exceptions import ConnectionError
+    from anecdoter.cache import cache
     tele_bot = TeleBot(token=token_2)
-    tele_bot.run_telebot()
+    try:
+        tele_bot.run_telebot()
+    except ConnectionError:
+        status = cache.drop_all_cache_to_db()
+        print("ConnectionError ocure\n"*10, status)
+        tele_bot.run_telebot()
 
 
 @cli.command()
