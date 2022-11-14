@@ -17,7 +17,7 @@ def aiobot(token, hook_host=None):
     from anecdoter.bot_app import AioBot
     aio_bot = AioBot(token=token,
                      web_hook_host=hook_host,
-                     web_hook_path='/',
+                     web_hook_path='/webhook',
                      web_app_host='0.0.0.0',
                      web_app_port=8443,
                      )
