@@ -1,4 +1,7 @@
 import logging
+import ssl
+from os.path import abspath
+
 from aiogram import Bot, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.dispatcher import Dispatcher
@@ -75,7 +78,7 @@ class AneBot:
                 state.trigger(message)
             self.storage.update_state(client_id, state)
         except Exception as e:
-            print("Exception!!!", e)
+            print("Out of state", e)
             s = state.machine.get_triggers(state.state)
             answer = list(filter(lambda x: not x.startswith('to_'), s))
             word = ''.join(word + ' ' for word in answer)
@@ -96,6 +99,14 @@ class AioBot(AneBot):
         self.buttons = {'grades_confirm': add_buttons(all_buttons=True),
                         'confirm': add_buttons(all_buttons=False),
                         }
+        cert = abspath('nginx/.ssl/fullchain.pem')
+        key = abspath('nginx/.ssl/privkey.pem')
+        logging.warning(f'SSL path cert -- {cert}, key -- {key}')
+        context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        context.load_cert_chain(cert, key)
+        logging.warning(f'WEBHOOK_URL -- \n {web_hook_url}')
+        logging.warning(f'APP_HOST -- \n {self.web_app_host}')
+        logging.warning(f'APP_PORT -- \n {self.web_app_port}')
 
         def get_admin_keyboard():
             markup = types.InlineKeyboardMarkup()
@@ -194,6 +205,7 @@ class AioBot(AneBot):
             skip_updates=True,
             host=self.web_app_host,
             port=self.web_app_port,
+            ssl_context=context,
         )
 
 
@@ -208,6 +220,7 @@ class TeleBot(AneBot):
                         }
         telebot = TeleBot(self.token, parse_mode=None)
         offset = None
+        num = 0
         while True:
             for message in telebot.get_updates(offset=offset):
                 offset = message.update_id + 1

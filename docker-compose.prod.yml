@@ -14,6 +14,18 @@ services:
   env_file:
    - ./.env
 
+ aiobot:
+  build:
+   context: ./
+   dockerfile: Dockerfile.prod
+  depends_on:
+   - db
+  command: python app.py aiobot
+  expose:
+   - 8443
+  env_file:
+   - ./.env
+
  nginx:
   build: ./nginx
   volumes:
@@ -23,19 +35,8 @@ services:
    - 443:443
   depends_on:
    - web
+   - aiobot
   restart: "always"
-
- aiobot:
-  build:
-   context: ./
-   dockerfile: Dockerfile.prod
-  depends_on:
-   - db
-  command: python app.py aiobot
-  ports:
-   - "8444:8444"
-  env_file:
-   - ./.env
 
  db:
   image: postgres

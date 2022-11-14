@@ -25,17 +25,17 @@ services:
    - web
   restart: "always"
 
- aiobot:
-  build:
-   context: ./
-   dockerfile: Dockerfile.prod
-  depends_on:
-   - db
-  command: python app.py aiobot
-  ports:
-   - "8444:8444"
-  env_file:
-   - ./.env
+# aiobot:
+#  build:
+#   context: ./
+#   dockerfile: Dockerfile.prod
+#  depends_on:
+#   - db
+#  command: python app.py aiobot
+#  ports:
+#   - "8444:8444"
+#  env_file:
+#   - ./.env
 
  telebot:
   build:
