@@ -220,16 +220,19 @@ class TeleBot(AneBot):
                         }
         telebot = TeleBot(self.token, parse_mode=None)
         offset = None
-        num = 0
-        while True:
-            for message in telebot.get_updates(offset=offset):
-                offset = message.update_id + 1
-                chat_id = message.message.chat.id
-                response = self.handle(chat_id, message.message.text)
-                if response.endswith(RATING):
-                    markup = self.buttons['grades_confirm']
-                elif response.endswith('?'):
-                    markup = self.buttons['confirm']
-                else:
-                    markup = None
-                telebot.send_message(chat_id, response, reply_markup=markup)
+        try:
+            while True:
+                for message in telebot.get_updates(offset=offset):
+                    offset = message.update_id + 1
+                    chat_id = message.message.chat.id
+                    response = self.handle(chat_id, message.message.text)
+                    if response.endswith(RATING):
+                        markup = self.buttons['grades_confirm']
+                    elif response.endswith('?'):
+                        markup = self.buttons['confirm']
+                    else:
+                        markup = None
+                    telebot.send_message(chat_id, response, reply_markup=markup)
+        except Exception as e:
+            status = cache.drop_all_cache_to_db()
+            print("TELEBOT fell\n" * 10, e, 'drop to db', status)
