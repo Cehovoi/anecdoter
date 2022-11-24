@@ -34,6 +34,14 @@ def add_buttons(all_buttons=False, button_types=types):
     return markup
 
 
+def ssl_connect():
+    cert = abspath('nginx/.ssl/fullchain.pem')
+    key = abspath('nginx/.ssl/privkey.pem')
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    context.load_cert_chain(cert, key)
+    return context
+
+
 class AneBot:
 
     def __init__(self,
@@ -99,14 +107,9 @@ class AioBot(AneBot):
         self.buttons = {'grades_confirm': add_buttons(all_buttons=True),
                         'confirm': add_buttons(all_buttons=False),
                         }
-        cert = abspath('nginx/.ssl/fullchain.pem')
-        key = abspath('nginx/.ssl/privkey.pem')
-        logging.warning(f'SSL path cert -- {cert}, key -- {key}')
-        context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-        context.load_cert_chain(cert, key)
-        logging.warning(f'WEBHOOK_URL -- \n {web_hook_url}')
-        logging.warning(f'APP_HOST -- \n {self.web_app_host}')
-        logging.warning(f'APP_PORT -- \n {self.web_app_port}')
+        # for local regime, ngrok have his ssl
+        context = ssl_connect() if self.web_app_port == 8444 else None
+        logging.warning(self.__dict__)
 
         def get_admin_keyboard():
             markup = types.InlineKeyboardMarkup()
@@ -197,7 +200,7 @@ class AioBot(AneBot):
             await bot.delete_webhook()
             logging.warning(f'{status}\nBye!')
 
-        start_webhook(
+        start_dict = dict(
             dispatcher=dp,
             webhook_path=self.web_hook_path,
             on_startup=on_startup,
@@ -207,6 +210,11 @@ class AioBot(AneBot):
             port=self.web_app_port,
             ssl_context=context,
         )
+        try:
+            start_webhook(**start_dict)
+        except Exception as e:
+            status = cache.drop_all_cache_to_db()
+            logging.warning("AIOBOT fell\n" * 10, e, 'drop to db', status)
 
 
 class TeleBot(AneBot):
