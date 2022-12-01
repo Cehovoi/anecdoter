@@ -8,14 +8,17 @@ from anecdoter.web_app import db, admin, login
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
+    # todo need overrite chat_id(int) to user_id(str)
     chat_id = db.Column(db.Integer, unique=True)
     words = db.relationship('Word')
+    # TODO add login field, remove unique from username
     username = db.Column(db.String(64), nullable=True, unique=True)
     role = db.Column(db.String(64), default='user')
     password_hash = db.Column(db.String(512), nullable=True)
     created_on = db.Column(db.DateTime, default=datetime.utcnow)
     updated_on = db.Column(db.DateTime, default=datetime.utcnow,
                            onupdate=datetime.utcnow)
+    # TODO add already_rated list field bind with RatedJokes.message_id field
 
     def __init__(self, chat_id):
         self.chat_id = chat_id
@@ -69,6 +72,9 @@ class RatedJokes(db.Model):
     joke = db.Column(db.Text(), nullable=False)
     grade = db.Column(db.Integer, default=1)
     position = db.Column(db.Integer, default=1)
+    # todo add chat_id field bind with chat_id many(chat_id) -> one(user)
+    # before add new RatedJokes check words for coordinate fields
+    # if several rated (several chat_id) grade several numbers
 
     def __init__(self, joke, grade, word):
         self.word = word
