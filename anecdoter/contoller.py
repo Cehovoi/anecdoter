@@ -31,17 +31,17 @@ def get_admin_rights(chat_id):
 
 class Combiner:
     def __init__(self, uid, word, amount_pages=0,
-                 joke_index=0, page_num=1, jokes_len=0):
+                 joke_index=0, page_num=1, jokes_len=0, username=''):
         self.uid = uid
         self.word = word
         self.amount_pages = amount_pages
         self.joke_index = joke_index
         self.page_num = page_num
         self.jokes_len = jokes_len
+        self.username = username
 
     def run_parser(self):
-        jokes, amount_pages = get_jokes(self.word, self.page_num,
-                                        self.amount_pages)
+        jokes, amount_pages = get_jokes(self.word, self.page_num)
         self.amount_pages = amount_pages
         self.jokes_len = len(jokes)
         # new attribute, with jokes list
@@ -83,8 +83,6 @@ class Combiner:
                 # create db record
                 self.run_parser()
                 # jokes does not exists
-                if not self.amount_pages:
-                    return
                 word = Word(word=self.word, amount_pages=self.amount_pages,
                             chat_id=self.uid)
                 user = session.query(User).filter_by(chat_id=self.uid).first()
@@ -120,7 +118,7 @@ class RatingFill:
         stack_jokes = []
         for joke in jokes:
             joke.position += 1
-            if joke.position >= AMOUNT_JOKES_FOR_RATING+1:
+            if joke.position >= AMOUNT_JOKES_FOR_RATING + 1:
                 self.delete(joke, session)
                 continue
             stack_jokes.append(joke)
@@ -139,6 +137,3 @@ class RatingFill:
     def delete(obj, session):
         session.delete(obj)
         session.commit()
-
-
-

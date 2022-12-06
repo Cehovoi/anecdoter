@@ -1,6 +1,7 @@
 import logging
 import os
 import ssl
+from datetime import datetime
 
 from aiogram import Bot, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
@@ -12,11 +13,10 @@ from aiogram.utils.exceptions import MessageNotModified
 from aiogram.utils.executor import start_webhook
 from aiogram.utils.callback_data import CallbackData
 
-from .consts import BLOCK_TRIGGER, SEARCH_TRIGGER, GRADE, RATING, DOMAIN
+from .consts import GRADE, DOMAIN, DOES_NOT_EXISTS, ONE_MORE
 from .contoller import get_admin_rights
-from .fsm import FSM
+from .parser import DoesNotExists
 from .cache import cache
-from .tools import string_formatter
 
 logging.basicConfig(level=logging.INFO)
 
@@ -53,7 +53,7 @@ def get_button(title, action, amount):
 
 def get_confirm_buttons(joke_word=''):
     more_button = get_button(
-        title=f'Ещё {joke_word}',
+        title=f'{ONE_MORE} {joke_word}',
         action='more',
         amount=0
     )
@@ -73,6 +73,16 @@ def get_ratting_buttons():
     )
         for var in range(1, 6)]
     return buttons
+
+
+def get_invite_button(amount):
+    date = datetime.now().isoformat(sep=" ", timespec="seconds")
+    invite_button = types.InlineKeyboardButton(
+        text=f'{GRADE * amount}, {date}, на сайт 👆',
+        callback_data=user_cb.new(action='invite', amount=0),
+        url=f'{DOMAIN}/rating/{amount}/1',
+    )
+    return invite_button
 
 
 def get_admin_keyboard():
@@ -109,7 +119,7 @@ def get_user_keyboard(joke_word):
     return markup
 
 
-@dp.message_handler(commands='admin')
+@dp.message_handler(state='*', commands='admin')
 async def cmd_admin_enter(message: types.Message):
     admin = get_admin_rights(message.from_id)
     if not admin:
@@ -119,14 +129,15 @@ async def cmd_admin_enter(message: types.Message):
                             reply_markup=admin_keyboard)
 
 
-@dp.callback_query_handler(admin_cb.filter(action='show_cache'))
+@dp.callback_query_handler(admin_cb.filter(action='show_cache'), state='*')
 async def admin_show_cache(query: types.CallbackQuery):
-    all_user_cache = cache._cache
+    all_user_cache = cache.data
+    logging.info(f'all_user_cache {all_user_cache}')
     cache_list = [(key,
-                   value.get('word'),
-                   ('Всего страниц', value.get('amount_pages')),
-                   ('Номер анекдота', value.get('joke_index')),
-                   ('Номер страницы', value.get('page_num')))
+                   value[key]['data'].get('word'),
+                   ('Всего страниц', value[key]['data'].get('amount_pages')),
+                   ('Номер анекдота', value[key]['data'].get('joke_index')),
+                   ('Номер страницы', value[key]['data'].get('page_num')))
                   for key, value in all_user_cache.items()]
     await bot.edit_message_text(
         f'Всего народа {len(all_user_cache)}\n'
@@ -136,7 +147,7 @@ async def admin_show_cache(query: types.CallbackQuery):
         reply_markup=admin_keyboard)
 
 
-@dp.callback_query_handler(admin_cb.filter(action='sync_db'))
+@dp.callback_query_handler(admin_cb.filter(action='sync_db'), state='*')
 async def admin_sync_db(query: types.CallbackQuery):
     status = cache.drop_all_cache_to_db()
     await bot.edit_message_text(
@@ -146,7 +157,7 @@ async def admin_sync_db(query: types.CallbackQuery):
         reply_markup=admin_keyboard)
 
 
-@dp.callback_query_handler(admin_cb.filter(action='show_stat'))
+@dp.callback_query_handler(admin_cb.filter(action='show_stat'), state='*')
 async def admin_show_stat(query: types.CallbackQuery):
     address = DOMAIN + f'/login/{query.from_user.id}'
     await bot.edit_message_text(
@@ -162,9 +173,8 @@ async def cmd_start(message: types.Message, state: FSMContext):
     Conversation's entry point
     """
     # Set state
-    logging.info(f'current cache dict {cache.data}')
     await Form.word.set()
-    await message.reply("Давай тему: слово или словосочетание")
+    await message.answer("Давай тему: слово или фразу")
 
 
 # !!!! TExt
@@ -178,97 +188,106 @@ async def cancel_handler(message: types.Message, state: FSMContext):
     if current_state is None:
         return
     logging.info('Cancelling state %r', current_state)
-    # Cancel state and inform user about it
     await state.finish()
-    # And remove keyboard (just in case)
-    await message.reply('Конец!', reply_markup=types.ReplyKeyboardRemove())
+    await message.answer("Не смешно...")
+
+
+@dp.message_handler(lambda message: not all(
+    [word.isalpha() for word in message.text.strip().split(' ')]),
+                    state=Form.word)
+async def process_new_word_invalid(message: types.Message):
+    """
+    If word is invalid
+    """
+    return await message.reply(
+        "Никаих цифр или знаков препинания, только слово или несколько слов!")
 
 
 @dp.message_handler(state=Form.word)
 async def process_new_word(message: types.Message, state: FSMContext):
-
     chat_id = message.chat.id
     joke_word = message.text
-    # markup = get_user_keyboard(user_cb, joke_word=joke_word)
     markup = get_user_keyboard(joke_word)
-
-    # logging.info(f'BEFORE state.get.data - {data}')
-    #req = cache._set_user_word(chat_id, joke_word)
-    # await state.update_data(uid=req)
-    await state.set_data(data=dict(word=joke_word))
-    # current_state = await state.get_state()
+    logging.info(f'message {message}')
+    try:
+        await state.set_data(data=dict(word=joke_word,
+                                       username=message.chat.username))
+    except DoesNotExists:
+        return SendMessage(chat_id, DOES_NOT_EXISTS)
     joke = await state.get_data()
-    logging.info(f'process_word joke {joke}, typr joke {type(joke)}')
     await Form.next()
-    # await message.reply("Анекдот тут!\n" * 3, reply_markup=markup)
-    return SendMessage(chat_id,
-                       joke,
-                       reply_markup=markup)
-
-
-@dp.callback_query_handler(user_cb.filter(action='more'), state=Form.telling)
-async def process_next_word(query: types.CallbackQuery, state: FSMContext):
-    markup = query.message.reply_markup
-    # when wee get to this from ratting state ratting_buttons haven`t in markup
-    if len(markup['inline_keyboard']) == 1:
-        logging.info(f'ratting_buttons {ratting_buttons}')
-        markup['inline_keyboard'].insert(0, ratting_buttons[-2:])
-        markup['inline_keyboard'].insert(0, ratting_buttons[:3])
-    # logging.info(f'process_next_word markup - {markup}')
-
-    joke = await state.get_data()
-    # to reply to previos message
-    # await query.message.reply("Анекдот тут!")
-    logging.info(f'process_next_word joke {joke}, typr joke {type(joke)}')
-    # to edit message
-    # await bot.edit_message_text(text='',
-    # query.from_user.id, query.message.message_id,)
-
-    await query.message.answer(text=joke,
-                               reply_markup=markup,
-                               )
+    return SendMessage(chat_id, joke, reply_markup=markup)
 
 
 @dp.callback_query_handler(user_cb.filter(action='more'), state=Form.word)
 async def process_next_word(query: types.CallbackQuery):
-    await bot.edit_message_text(text="Придётся писать!",
+    await query.message.answer("Пишем ручками слово или фразу")
+
+
+@dp.callback_query_handler(user_cb.filter(action='more'), state=Form.telling)
+async def process_next_word(query: types.CallbackQuery, state: FSMContext):
+    message_id = query.message.message_id
+    message_text = query.message.text
+    markup = query.message.reply_markup
+    confirm_buttons = markup['inline_keyboard'].pop()
+    await bot.edit_message_text(text=message_text,
                                 chat_id=query.from_user.id,
-                                message_id=query.message.message_id)
+                                message_id=message_id,
+                                reply_markup=markup)
+    # if joke already rated
+    if len(markup['inline_keyboard']) == 1:
+        # remove grade button with link to site
+        markup['inline_keyboard'].pop()
+        markup['inline_keyboard'].insert(0, ratting_buttons[-2:])
+        markup['inline_keyboard'].insert(0, ratting_buttons[:3])
+    markup['inline_keyboard'].append(confirm_buttons)
+    try:
+        joke = await state.get_data()
+    except KeyError:
+        await state.set_data(data=dict(
+            word=confirm_buttons[0]["text"][len(ONE_MORE) + 1:],
+            username=query.message.chat.username))
+        joke = await state.get_data()
+    await query.message.answer(text=joke, reply_markup=markup)
+
+
+@dp.callback_query_handler(user_cb.filter(action='new'), state=Form.word)
+async def process_next_word(query: types.CallbackQuery):
+    await query.message.answer("Придётся писать!")
 
 
 @dp.callback_query_handler(user_cb.filter(action='new'), state=Form.telling)
-async def process_next_word(query: types.CallbackQuery, state: FSMContext):
+async def process_next_word(query: types.CallbackQuery):
     # save progress with word to db
+    message_id = query.message.message_id
+    message_text = query.message.text
+    markup = query.message.reply_markup
+    markup['inline_keyboard'].pop(len(markup['inline_keyboard']) - 1)
+    await bot.edit_message_text(text=message_text,
+                                chat_id=query.from_user.id,
+                                message_id=message_id,
+                                reply_markup=markup)
     await Form.word.set()
-    await query.message.answer("Давай тему: слово или словосочетание",
-                               # reply_markup=user_keyboard,
-                               )
+    await query.message.answer("Давай тему: слово или фразу")
 
 
-@dp.callback_query_handler(user_cb.filter(action='ratting'), state=Form.telling)
+@dp.callback_query_handler(user_cb.filter(action='ratting'), state='*')
 async def process_ratting_joke(query: types.CallbackQuery,
                                callback_data: dict,
-                               state: FSMContext):
+                               ):
     markup = query.message.reply_markup
-    # delete ratting_buttons from markup
+    invite_button = get_invite_button(int(callback_data['amount']))
+    # remove rows with ratting
     markup['inline_keyboard'].pop(0)
     markup['inline_keyboard'].pop(0)
-    logging.info(f'process_ratting_joke query --- {query}')
-
+    # add row with invite
+    markup['inline_keyboard'].insert(0, [invite_button])
     message_id = query.message.message_id
-    logging.info(f'process_ratting_joke message_id -- {message_id}')
-    # check if message already ratted by user
-    if message_id == 4616:
-        logging.info(f'if message_id == 4616')
-        text = f"Анекдот уже оценен!"
-
-    else:
-        # some operations with db
-        text = f"Анекдот добавлен на сайт c рейтингом {callback_data['amount']}"
-    await query.message.reply(
-        text=text,
-        reply_markup=markup,
-    )
+    message_text = query.message.text
+    await bot.edit_message_text(text=message_text,
+                                chat_id=query.from_user.id,
+                                message_id=message_id,
+                                reply_markup=markup)
 
 
 @dp.errors_handler(exception=MessageNotModified)

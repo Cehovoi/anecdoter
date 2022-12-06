@@ -9,11 +9,13 @@ class User(db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     # todo need overrite chat_id(int) to user_id(str)
+    #user_id = db.Column(db.String(64), unique=True)
     chat_id = db.Column(db.Integer, unique=True)
     words = db.relationship('Word')
     # TODO add login field, remove unique from username
-    username = db.Column(db.String(64), nullable=True, unique=True)
+    #username = db.Column(db.String(64), nullable=True,)
     role = db.Column(db.String(64), default='user')
+    #login = db.Column(db.String(64), nullable=True, unique=True)
     password_hash = db.Column(db.String(512), nullable=True)
     created_on = db.Column(db.DateTime, default=datetime.utcnow)
     updated_on = db.Column(db.DateTime, default=datetime.utcnow,

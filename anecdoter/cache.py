@@ -60,6 +60,7 @@ class Cache(MemoryStorage):
         try:
             joke = next(user_data['word_f'])
             user_data['joke_index'] += 1
+            user_data['joke'] = joke
         except StopIteration:
             # jump on new page
             user_data['page_num'] += 1
@@ -82,7 +83,7 @@ class Cache(MemoryStorage):
                 # recursion!
                 self.get_data()
         # todo add warning when jokes over
-        user_data['joke'] = joke
+
         return joke
 
     async def set_data(self, *,
@@ -93,10 +94,13 @@ class Cache(MemoryStorage):
             Rewrite set_data from basic class MemoryStorage
             deepcope don`t take gen func as arg
         """
-
+        if not data:
+            return
+        print(f'chat {chat}, user {user}')
         chat, user = self.resolve_address(chat=chat, user=user)
         self.check_cache_dict_fill()
         user_data = data.get('user_data', {})
+        input_word = data.get('word', None)
         # temporary measure in db chat_id int field
         int_user = int(user)
         print('user', user)
@@ -113,7 +117,7 @@ class Cache(MemoryStorage):
         print("exists_data -- ", exists_data)
         if not exists_data:
             # create or read db record
-            combiner = Combiner(uid=int_user, word=data['word'])
+            combiner = Combiner(uid=int_user, word=input_word)
             combiner.sync_db()
         else:
             # new word from user
