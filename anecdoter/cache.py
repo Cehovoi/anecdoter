@@ -63,13 +63,13 @@ class Cache(MemoryStorage):
             user_data['joke'] = joke
         except StopIteration:
             # jump on new page
+            print('except StopIteration')
             user_data['page_num'] += 1
             # reset because new page
             user_data['joke_index'] = 0
             if user_data['page_num'] <= user_data['amount_pages']:
-                self.set_data(data=dict(word=user_data['word'],
-                                        user_cache=user_data,
-                                        ))
+                print("if user_data['page_num'] <= user_data['amount_pages']:")
+                self.set_data(data=dict(user_data=user_data))
                 # recursion!
                 self.get_data()
             else:
@@ -77,14 +77,41 @@ class Cache(MemoryStorage):
                 user_data['page_num'] = 1
                 # joke = self.last_user_word_function(uid)
                 # joke = END_WARNING + '\n' + '\n' + joke
-                self.set_data(data=dict(word=user_data['word'],
-                                        user_cache=user_data,
-                                        ))
+                self.set_data(data=dict(user_data=user_data))
                 # recursion!
                 self.get_data()
         # todo add warning when jokes over
 
         return joke
+
+    @staticmethod
+    def process_joke_coordinate(uid, input_word, user_data, old_data):
+        if user_data:
+            # recall from last_user_word_function when jokes over on page
+            # start parser with updated joke_index and page_num
+            user_data = dic_shortener(user_data.items(), NEEDLESS_KEYS)
+            combiner = Combiner(uid=uid, **user_data)
+            combiner.run_parser()
+            user_data['word_f'] = combiner.jokefunc()
+            return user_data
+        print("exists_data -- ", old_data)
+        if not old_data:
+            # create or read db record
+            combiner = Combiner(uid=uid, word=input_word)
+            combiner.sync_db()
+        else:
+            # new word from user
+            # save joke_index and page_num old word to db
+            old_data = dic_shortener(old_data.items(), NEEDLESS_KEYS)
+            combiner = Combiner(uid=uid, **old_data)
+            combiner.sync_db(change_word=True)
+            # start parser and add new word to db
+            combiner = Combiner(uid=uid, word=input_word)
+            combiner.sync_db()
+        user_data.update(dic_shortener(combiner.__dict__.items(),
+                                       ('jokes', 'joke', 'uid')))
+        user_data['word_f'] = combiner.jokefunc()
+        return user_data
 
     async def set_data(self, *,
                        chat: typing.Union[str, int, None] = None,
@@ -99,11 +126,17 @@ class Cache(MemoryStorage):
         print(f'chat {chat}, user {user}')
         chat, user = self.resolve_address(chat=chat, user=user)
         self.check_cache_dict_fill()
-        user_data = data.get('user_data', {})
         input_word = data.get('word', None)
+        user_data = data.get('user_data', {}) if not input_word else {}
+        old_data = self.data[chat][user].get('data', {}) \
+            if not user_data else None
         # temporary measure in db chat_id int field
-        int_user = int(user)
-        print('user', user)
+        user_data = self.process_joke_coordinate(uid=int(user),
+                                                 input_word=input_word,
+                                                 user_data=user_data,
+                                                 old_data=old_data)
+
+        '''
         if user_data:
             # recall from last_user_word_function when jokes over on page
             # start parser with updated joke_index and page_num
@@ -131,13 +164,14 @@ class Cache(MemoryStorage):
         user_data.update(dic_shortener(combiner.__dict__.items(),
                                        ('jokes', 'joke', 'uid')))
         user_data['word_f'] = combiner.jokefunc()
+        '''
         self.data[chat][user]['data'] = user_data
         self._cleanup(chat, user)
 
     async def get_data(self, *,
                        chat: typing.Union[str, int, None] = None,
                        user: typing.Union[str, int, None] = None,
-                       default: typing.Optional[str] = None) -> typing.Dict:
+                       default: typing.Optional[str] = None):
         """
             Rewrite get_data from basic class MemoryStorage
             deepcope don`t take gen func as arg
@@ -145,7 +179,8 @@ class Cache(MemoryStorage):
         chat, user = self.resolve_address(chat=chat, user=user)
         # get next joke and update counter
 
-        return self.last_user_word_function(self.data[chat][user]['data'])
+        # return self.last_user_word_function(self.data[chat][user]['data'])
+        return self.data[chat][user]['data']
 
 
 cache = Cache()

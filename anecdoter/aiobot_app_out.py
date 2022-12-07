@@ -13,7 +13,7 @@ from aiogram.utils.exceptions import MessageNotModified
 from aiogram.utils.executor import start_webhook
 from aiogram.utils.callback_data import CallbackData
 
-from .consts import GRADE, DOMAIN, DOES_NOT_EXISTS, ONE_MORE
+from .consts import GRADE, DOMAIN, DOES_NOT_EXISTS, ONE_MORE, JOKES_OVER
 from .contoller import get_admin_rights
 from .parser import DoesNotExists
 from .cache import cache
@@ -119,6 +119,30 @@ def get_user_keyboard(joke_word):
     return markup
 
 
+async def process_user_joke(state, word=None, username=None):
+    try:
+        user_data = await state.get_data()
+        joke = next(user_data['word_f'])
+        user_data['joke_index'] += 1
+    except KeyError:
+        # data has been pushed out, let's recreate it!
+        await state.set_data(data=dict(word=word, username=username))
+        # recursion
+        return await process_user_joke(state)
+    except StopIteration:
+        user_data['page_num'] += 1
+        user_data['joke_index'] = 0
+        if user_data['page_num'] <= user_data['amount_pages']:
+            await state.set_data(data=dict(user_data=user_data))
+            # recursion
+            return await process_user_joke(state)
+        else:
+            user_data['page_num'] = 1
+            await state.set_data(data=dict(user_data=user_data))
+            return
+    return joke
+
+
 @dp.message_handler(state='*', commands='admin')
 async def cmd_admin_enter(message: types.Message):
     admin = get_admin_rights(message.from_id)
@@ -187,14 +211,13 @@ async def cancel_handler(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is None:
         return
-    logging.info('Cancelling state %r', current_state)
     await state.finish()
     await message.answer("Не смешно...")
 
 
 @dp.message_handler(lambda message: not all(
     [word.isalpha() for word in message.text.strip().split(' ')]),
-                    state=Form.word)
+    state=Form.word)
 async def process_new_word_invalid(message: types.Message):
     """
     If word is invalid
@@ -214,7 +237,8 @@ async def process_new_word(message: types.Message, state: FSMContext):
                                        username=message.chat.username))
     except DoesNotExists:
         return SendMessage(chat_id, DOES_NOT_EXISTS)
-    joke = await state.get_data()
+    joke = await process_user_joke(state)
+    joke = joke if joke else JOKES_OVER
     await Form.next()
     return SendMessage(chat_id, joke, reply_markup=markup)
 
@@ -234,6 +258,9 @@ async def process_next_word(query: types.CallbackQuery, state: FSMContext):
                                 chat_id=query.from_user.id,
                                 message_id=message_id,
                                 reply_markup=markup)
+    word = confirm_buttons[0]["text"][len(ONE_MORE) + 1:]
+    username = query.message.chat.username
+    joke = await process_user_joke(state, word, username)
     # if joke already rated
     if len(markup['inline_keyboard']) == 1:
         # remove grade button with link to site
@@ -241,13 +268,7 @@ async def process_next_word(query: types.CallbackQuery, state: FSMContext):
         markup['inline_keyboard'].insert(0, ratting_buttons[-2:])
         markup['inline_keyboard'].insert(0, ratting_buttons[:3])
     markup['inline_keyboard'].append(confirm_buttons)
-    try:
-        joke = await state.get_data()
-    except KeyError:
-        await state.set_data(data=dict(
-            word=confirm_buttons[0]["text"][len(ONE_MORE) + 1:],
-            username=query.message.chat.username))
-        joke = await state.get_data()
+    joke = joke if joke else JOKES_OVER
     await query.message.answer(text=joke, reply_markup=markup)
 
 

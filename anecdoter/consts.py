@@ -8,6 +8,8 @@ WORD_URL = 'https://www.anekdot.ru/search/?query={}&ch[j]=on&page={}'
 
 DOES_NOT_EXISTS = 'Анекдота на эту тему похоже в природе не существует.'
 
+JOKES_OVER = 'Шутки в сторону... на эту тему они закончились и пойдут заново'
+
 ONE_MORE = 'Ещё'
 
 GRADE = '★'
