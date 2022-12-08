@@ -9,7 +9,7 @@ def cli():
 
 @cli.command()
 def aiobot():
-    from anecdoter.aiobot_app_out import start_aiobot
+    from anecdoter.aiobot_app import start_aiobot
     start_aiobot()
 
 

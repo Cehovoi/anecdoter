@@ -56,17 +56,6 @@ class Combiner:
             # user want another theme, save current theme for parser to db
             page_num, joke_index, amount_pages = \
                 self.page_num, self.joke_index, self.amount_pages
-            # if page_num <= amount_pages:
-            #     if self.jokes_len > joke_index:
-            #         joke_index += 1
-            #     else:
-            #         if page_num == amount_pages:
-            #             page_num = 1
-            #             joke_index = 0
-            #         else:
-            #             page_num += 1
-            #             joke_index = 0
-
             word.page_num = page_num
             word.joke_index = joke_index
             word.amount_pages = amount_pages

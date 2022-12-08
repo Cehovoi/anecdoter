@@ -108,10 +108,11 @@ admin_keyboard = get_admin_keyboard()
 ratting_buttons = get_ratting_buttons()
 
 
-def get_user_keyboard(joke_word):
+def get_user_keyboard(joke_word, enable_rating=True):
     markup = types.InlineKeyboardMarkup()
-    markup.row(*ratting_buttons[:3])
-    markup.row(*ratting_buttons[-2:])
+    if enable_rating:
+        markup.row(*ratting_buttons[:3])
+        markup.row(*ratting_buttons[-2:])
     confirm_buttons = get_confirm_buttons(joke_word)
     more_button = confirm_buttons[0]
     new_joke_button = confirm_buttons[1]
@@ -137,6 +138,7 @@ async def process_user_joke(state, word=None, username=None):
             # recursion
             return await process_user_joke(state)
         else:
+            # jokes is over
             user_data['page_num'] = 1
             await state.set_data(data=dict(user_data=user_data))
             return
@@ -228,16 +230,25 @@ async def process_new_word_invalid(message: types.Message):
 
 @dp.message_handler(state=Form.word)
 async def process_new_word(message: types.Message, state: FSMContext):
+    """
+        input markup schema:
+    not rated:
+    0. |  *  | |  **  | |  ***   |
+    1. |  ****  | |  *****  |
+    2. | Ещё {word} | | Новый анекдот |
+    rated:
+    0. | *** {datetime.now()} на сайт |
+    1. | Ещё {word} | | Новый анекдот |
+    """
     chat_id = message.chat.id
     joke_word = message.text
-    markup = get_user_keyboard(joke_word)
-    logging.info(f'message {message}')
     try:
         await state.set_data(data=dict(word=joke_word,
                                        username=message.chat.username))
     except DoesNotExists:
         return SendMessage(chat_id, DOES_NOT_EXISTS)
     joke = await process_user_joke(state)
+    markup = get_user_keyboard(joke_word, enable_rating=joke != None)
     joke = joke if joke else JOKES_OVER
     await Form.next()
     return SendMessage(chat_id, joke, reply_markup=markup)
@@ -250,24 +261,36 @@ async def process_next_word(query: types.CallbackQuery):
 
 @dp.callback_query_handler(user_cb.filter(action='more'), state=Form.telling)
 async def process_next_word(query: types.CallbackQuery, state: FSMContext):
-    message_id = query.message.message_id
-    message_text = query.message.text
+    """
+        input markup schema:
+    not rated:
+    0. |  *  | |  **  | |  ***   |
+    1. |  ****  | |  *****  |
+    2. | Ещё {word} | | Новый анекдот |
+    rated:
+    0. | *** {datetime.now()} на сайт |
+    1. | Ещё {word} | | Новый анекдот |
+    """
     markup = query.message.reply_markup
     confirm_buttons = markup['inline_keyboard'].pop()
-    await bot.edit_message_text(text=message_text,
+    await bot.edit_message_text(text=query.message.text,
                                 chat_id=query.from_user.id,
-                                message_id=message_id,
+                                message_id=query.message.message_id,
                                 reply_markup=markup)
+    # needs when current user data pushed out from cache dict
     word = confirm_buttons[0]["text"][len(ONE_MORE) + 1:]
     username = query.message.chat.username
     joke = await process_user_joke(state, word, username)
+    keyboard = markup['inline_keyboard']
     # if joke already rated
-    if len(markup['inline_keyboard']) == 1:
+    if len(keyboard) <= 1 or not joke:
         # remove grade button with link to site
-        markup['inline_keyboard'].pop()
-        markup['inline_keyboard'].insert(0, ratting_buttons[-2:])
-        markup['inline_keyboard'].insert(0, ratting_buttons[:3])
-    markup['inline_keyboard'].append(confirm_buttons)
+        keyboard = []
+        if joke:
+            keyboard.insert(0, ratting_buttons[-2:])
+            keyboard.insert(0, ratting_buttons[:3])
+    keyboard.append(confirm_buttons)
+    markup['inline_keyboard'] = keyboard
     joke = joke if joke else JOKES_OVER
     await query.message.answer(text=joke, reply_markup=markup)
 
