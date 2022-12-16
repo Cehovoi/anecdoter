@@ -8,22 +8,19 @@ from anecdoter.web_app import db, admin, login
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    # todo need overrite chat_id(int) to user_id(str)
-    #user_id = db.Column(db.String(64), unique=True)
-    chat_id = db.Column(db.Integer, unique=True)
-    words = db.relationship('Word')
-    # TODO add login field, remove unique from username
-    #username = db.Column(db.String(64), nullable=True,)
+    user_id = db.Column(db.Integer, unique=True)
+    words = db.relationship('Word', cascade='all, delete', backref='parent')
+    username = db.Column(db.String(64), nullable=True,)
     role = db.Column(db.String(64), default='user')
-    #login = db.Column(db.String(64), nullable=True, unique=True)
+    login = db.Column(db.String(64), nullable=True, unique=True)
     password_hash = db.Column(db.String(512), nullable=True)
     created_on = db.Column(db.DateTime, default=datetime.utcnow)
     updated_on = db.Column(db.DateTime, default=datetime.utcnow,
                            onupdate=datetime.utcnow)
-    # TODO add already_rated list field bind with RatedJokes.message_id field
 
-    def __init__(self, chat_id):
-        self.chat_id = chat_id
+    def __init__(self, user_id, username):
+        self.user_id = user_id
+        self.username = username
 
     @property
     def set_password(self):
@@ -37,7 +34,7 @@ class User(db.Model, UserMixin):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return f'\nchat_id == {self.chat_id}\n' \
+        return f'\nchat_id == {self.user_id}\n' \
                f'username == {self.username}\n' \
                f'created_on == {self.created_on}\n' \
                f'role == {self.role}\n\n' \
@@ -51,13 +48,13 @@ class Word(db.Model):
     amount_pages = db.Column(db.Integer)
     joke_index = db.Column(db.Integer, default=1)
     page_num = db.Column(db.Integer, default=1)
-    chat_id = db.Column(db.Integer, db.ForeignKey("users.chat_id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"))
     created = db.Column(db.DateTime, default=datetime.now)
 
-    def __init__(self, word, amount_pages, chat_id):
+    def __init__(self, word, amount_pages, user_id):
         self.word = word
         self.amount_pages = amount_pages
-        self.chat_id = chat_id
+        self.user_id  = user_id
 
     def __repr__(self):
         return f'\nword == {self.word}\n' \
@@ -100,7 +97,7 @@ class MyModelView(ModelView):
         Flask Admin settings
     """
     column_exclude_list = ['password_hash', ]
-    column_searchable_list = ['chat_id']
+    column_searchable_list = ['user_id']
 
     def is_accessible(self):
         if current_user.role != 'admin':

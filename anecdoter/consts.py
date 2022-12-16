@@ -14,7 +14,7 @@ ONE_MORE = 'Ещё'
 
 GRADE = '★'
 
-NEEDLESS_KEYS = ('state', 'word_f', 'joke')
+
 
 AMOUNT_JOKES_FOR_RATING = 9
 
@@ -22,22 +22,17 @@ AMOUNT_JOKES_FOR_RATING = 9
 DOMAIN = 'anecdoter.su'
 SITE = 'anecdoter.su/rating/{}/{}'
 
-
+HELP_MESSAGE = 'Ты мне слово я тебе анекдот.\nАнекдот может быть бородатым ' \
+               'и не смешным\nЗа это можешь поставить ему плохую оценку.\n' \
+               'Все оценённые анекдоты попадают на сайт, ' \
+               'куда можешь попасть и ты ' \
+               'перейдя по ссылке после оценки.\n' \
+               'А можешь пока не оценивать и либо ткнуть на кнопку "Ещё" ' \
+               'либо написать новоё слово или фразу.\n' \
+               'Жми на старт и поехали!'
 
 
 LOGIN_ERROR = 'Admin panel only for those ' \
                'who use the bot.' \
                'Go to telegram and get your chat id.' \
                'Click on text to go back to rating jokes'
-
-END_WARNING = 'Анекдоты на эту тему закончились, но не отчаивайся повторение мать заикания!'
-
-RATING = 'Только сначала нажми на кнопку и оцени анекдот!'
-
-SEARCH_TRIGGER = 'search_word_for_get_joke'
-
-BLOCK_TRIGGER = 'ДА и НЕТ в данном случае не уместны'
-
-INVITATION = 'Спасибо за контент, анекдот добавлен на сайт, ' \
-             'зайди и посмотри анекдоты с ' \
-             'таким же рейтингом.\n'

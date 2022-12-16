@@ -13,7 +13,7 @@ def get_chat_ids():
     create_app().app_context().push()
     from anecdoter import db
     from anecdoter.models import User
-    chat_ids = db.session.query(User.chat_id).all()
+    chat_ids = db.session.query(User.user_id).all()
     return tuple(ch_i[0] for ch_i in chat_ids)
 
 

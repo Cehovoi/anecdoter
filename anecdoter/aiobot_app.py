@@ -13,7 +13,8 @@ from aiogram.utils.exceptions import MessageNotModified
 from aiogram.utils.executor import start_webhook
 from aiogram.utils.callback_data import CallbackData
 
-from .consts import GRADE, DOMAIN, DOES_NOT_EXISTS, ONE_MORE, JOKES_OVER
+from .consts import GRADE, DOMAIN, DOES_NOT_EXISTS, ONE_MORE, JOKES_OVER, \
+    HELP_MESSAGE
 from .contoller import get_admin_rights
 from .parser import DoesNotExists
 from .cache import cache
@@ -203,18 +204,10 @@ async def cmd_start(message: types.Message, state: FSMContext):
     await message.answer("Давай тему: слово или фразу")
 
 
-# !!!! TExt
-@dp.message_handler(state='*', commands='cancel')
-@dp.message_handler(Text(equals='cancel', ignore_case=True), state='*')
+@dp.message_handler(state='*', commands='help')
+@dp.message_handler(Text(equals='help', ignore_case=True), state='*')
 async def cancel_handler(message: types.Message, state: FSMContext):
-    """
-    Allow user to cancel any action
-    """
-    current_state = await state.get_state()
-    if current_state is None:
-        return
-    await state.finish()
-    await message.answer("Не смешно...")
+    await message.answer(HELP_MESSAGE)
 
 
 @dp.message_handler(lambda message: not all(
@@ -341,8 +334,13 @@ async def message_not_modified_handler(update, error):
 
 
 async def on_startup(dp):
+    bot_commands = [
+        types.BotCommand(command='/start', description='Поехали!'),
+        types.BotCommand(command='/help', description='Что здесь происходит'),
+        types.BotCommand(command='/admin', description='Админка для админов'),
+    ]
+    await bot.set_my_commands(bot_commands)
     await bot.set_webhook(web_hook_url)
-    # insert code here to run it after start
 
 
 async def on_shutdown(dp):
@@ -351,18 +349,6 @@ async def on_shutdown(dp):
     # Remove webhook (not acceptable in some cases)
     await bot.delete_webhook()
     logging.warning(f'{status}\nBye!')
-
-
-async def setup_bot_commands(dp):
-    bot_commands = [
-        types.BotCommand(command='/start', description='Поехали!'),
-        types.BotCommand(command='/cancel', description='Хорош!'),
-        types.BotCommand(command="/help", description="Get info about me"),
-        types.BotCommand(command="/qna", description="set bot for a QnA task"),
-        types.BotCommand(command="/chat", description="set bot for free chat"),
-
-    ]
-    await bot.set_my_commands(bot_commands)
 
 
 def start_aiobot():

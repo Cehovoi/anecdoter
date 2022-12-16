@@ -65,7 +65,7 @@ def login(chat_id):
 
 @blue.route('/logout')
 def logout():
-    chat_id = current_user.chat_id
+    chat_id = current_user.user_id
     logout_user()
     return redirect(f'/rating/1/{chat_id}')
 

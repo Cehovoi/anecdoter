@@ -3,8 +3,7 @@ from collections import OrderedDict
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import typing
 
-from anecdoter.consts import SIZE_OF_CASH, END_WARNING, \
-    NEEDLESS_KEYS
+from anecdoter.consts import SIZE_OF_CASH
 from anecdoter.contoller import Combiner, RatingFill
 from anecdoter.tools import dic_shortener
 
@@ -28,7 +27,9 @@ class Cache(MemoryStorage):
             return 'Nothing_to_drop_cache_is_empty'
         try:
             for num, user_cache in enumerate(users_cache.values()):
-                self._drop_cache_to_db(user_cache)
+                data = (tuple(user_cache.values()))[0]['data']
+                data['uid'] = int((tuple(user_cache.keys()))[0])
+                self._drop_cache_to_db(data)
             return f'Dropped_cache_of_{num + 1}_users'
         except Exception as e:
             return f'Fail because {e}'
@@ -36,7 +37,7 @@ class Cache(MemoryStorage):
     @staticmethod
     def _drop_cache_to_db(user_cache):
         combiner = Combiner(**dic_shortener(user_cache.items(),
-                                            NEEDLESS_KEYS))
+                                            ('word_f', 'joke')))
         combiner.sync_db(change_word=True)
 
     def set_user_grade(self, uid, message):
@@ -48,28 +49,27 @@ class Cache(MemoryStorage):
         rating.update_db()
 
     @staticmethod
-    def process_joke_coordinate(uid, input_word, user_data, old_data):
+    def process_joke_coordinate(uid, input_word, user_data, old_data, username):
         if user_data:
-            # recall from last_user_word_function when jokes over on page
+            # call from process_user_joke when jokes over on page
             # start parser with updated joke_index and page_num
-            user_data = dic_shortener(user_data.items(), NEEDLESS_KEYS)
-            combiner = Combiner(uid=uid, **user_data)
+            user_data = dic_shortener(user_data.items(), ('word_f', 'joke'))
+            combiner = Combiner(uid=uid, username=username, **user_data)
             combiner.run_parser()
             user_data['word_f'] = combiner.jokefunc()
             return user_data
-        print("exists_data -- ", old_data)
         if not old_data:
             # create or read db record
-            combiner = Combiner(uid=uid, word=input_word)
+            combiner = Combiner(uid=uid, username=username, word=input_word)
             combiner.sync_db()
         else:
             # new word from user
             # save joke_index and page_num old word to db
-            old_data = dic_shortener(old_data.items(), NEEDLESS_KEYS)
+            old_data = dic_shortener(old_data.items(), ('word_f', 'joke'))
             combiner = Combiner(uid=uid, **old_data)
             combiner.sync_db(change_word=True)
             # start parser and add new word to db
-            combiner = Combiner(uid=uid, word=input_word)
+            combiner = Combiner(uid=uid, username=username, word=input_word)
             combiner.sync_db()
         user_data.update(dic_shortener(combiner.__dict__.items(),
                                        ('jokes', 'joke', 'uid')))
@@ -84,17 +84,19 @@ class Cache(MemoryStorage):
             Rewrite set_data from basic class MemoryStorage
             deepcope don`t take gen func as arg
         """
+        uid = user
         chat, user = self.resolve_address(chat=chat, user=user)
         self.check_cache_dict_fill()
+        username = data.get('username', None)
         input_word = data.get('word', None)
         user_data = data.get('user_data', {}) if not input_word else {}
         old_data = self.data[chat][user].get('data', {}) \
             if not user_data else None
-        # temporary measure in db chat_id int field
-        user_data = self.process_joke_coordinate(uid=int(user),
+        user_data = self.process_joke_coordinate(uid=uid,
                                                  input_word=input_word,
                                                  user_data=user_data,
-                                                 old_data=old_data)
+                                                 old_data=old_data,
+                                                 username=username)
         self.data[chat][user]['data'] = user_data
         self._cleanup(chat, user)
 

@@ -21,24 +21,24 @@ def db_connector():
     return session
 
 
-def get_admin_rights(chat_id):
+def get_admin_rights(user_id):
     from .models import User
     session = db_connector()
-    user = session.query(User).filter_by(chat_id=chat_id,
+    user = session.query(User).filter_by(user_id=user_id,
                                          role='admin').first()
     return user
 
 
 class Combiner:
-    def __init__(self, uid, word, amount_pages=0,
-                 joke_index=0, page_num=1, jokes_len=0, username=''):
+    def __init__(self, uid, username, word, amount_pages=0,
+                 joke_index=0, page_num=1, jokes_len=0,):
         self.uid = uid
+        self.username = username
         self.word = word
         self.amount_pages = amount_pages
         self.joke_index = joke_index
         self.page_num = page_num
         self.jokes_len = jokes_len
-        self.username = username
 
     def run_parser(self):
         jokes, amount_pages = get_jokes(self.word, self.page_num)
@@ -50,7 +50,7 @@ class Combiner:
     def sync_db(self, change_word=False):
         from .models import User, Word
         session = db_connector()
-        word = session.query(Word).filter_by(chat_id=self.uid,
+        word = session.query(Word).filter_by(user_id=self.uid,
                                              word=self.word).first()
         if change_word:
             # user want another theme, save current theme for parser to db
@@ -73,12 +73,12 @@ class Combiner:
                 self.run_parser()
                 # jokes does not exists
                 word = Word(word=self.word, amount_pages=self.amount_pages,
-                            chat_id=self.uid)
-                user = session.query(User).filter_by(chat_id=self.uid).first()
+                            user_id=self.uid)
+                user = session.query(User).filter_by(user_id=self.uid).first()
                 if user:
                     self.save([word], session)
                     return
-                user = User(chat_id=self.uid)
+                user = User(user_id=self.uid, username=self.username)
                 self.save([word, user], session)
 
     @staticmethod
