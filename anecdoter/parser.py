@@ -7,6 +7,10 @@ from urllib.parse import urljoin
 from anecdoter.consts import PHRASE_URL, WORD_URL
 
 
+class DoesNotExists(Exception):
+    pass
+
+
 def get_url(word, page=1):
     # if word phrase
     if ' ' in word:
@@ -16,18 +20,18 @@ def get_url(word, page=1):
     return url.format(word, page)
 
 
-def get_jokes(word, page=1, amount_pages=0):
+def get_jokes(word, page=1):
     session = HTMLSession()
     url = get_url(word=word, page=page)
     response = session.get(url)
     soup = BeautifulSoup(response.text, 'lxml')  # "html.parser"
     jokes = soup.find_all("div", {"class": "text"})
-    if not amount_pages:
-        pageslist = soup.find_all("div", {"class": "pageslist"})
-        if pageslist:
-            amount_pages = tuple(filter(lambda x: x.isdigit(),
-                                        pageslist[0].text))[-1]
-            amount_pages = int(amount_pages)
+    pageslist = soup.find_all("div", {"class": "pageslist"})
+    if not pageslist:
+        raise DoesNotExists
+    amount_pages = max(tuple(
+        int(i.text) for i in pageslist[0] if i.text.isdigit()
+    ))
     return jokes, amount_pages
 
 

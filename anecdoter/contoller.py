@@ -21,18 +21,19 @@ def db_connector():
     return session
 
 
-def get_admin_rights(chat_id):
+def get_admin_rights(user_id):
     from .models import User
     session = db_connector()
-    user = session.query(User).filter_by(chat_id=chat_id,
+    user = session.query(User).filter_by(user_id=user_id,
                                          role='admin').first()
     return user
 
 
 class Combiner:
-    def __init__(self, uid, word, amount_pages=0,
-                 joke_index=0, page_num=1, jokes_len=0):
+    def __init__(self, uid, username, word, amount_pages=0,
+                 joke_index=0, page_num=1, jokes_len=0,):
         self.uid = uid
+        self.username = username
         self.word = word
         self.amount_pages = amount_pages
         self.joke_index = joke_index
@@ -40,8 +41,7 @@ class Combiner:
         self.jokes_len = jokes_len
 
     def run_parser(self):
-        jokes, amount_pages = get_jokes(self.word, self.page_num,
-                                        self.amount_pages)
+        jokes, amount_pages = get_jokes(self.word, self.page_num)
         self.amount_pages = amount_pages
         self.jokes_len = len(jokes)
         # new attribute, with jokes list
@@ -50,23 +50,12 @@ class Combiner:
     def sync_db(self, change_word=False):
         from .models import User, Word
         session = db_connector()
-        word = session.query(Word).filter_by(chat_id=self.uid,
+        word = session.query(Word).filter_by(user_id=self.uid,
                                              word=self.word).first()
         if change_word:
             # user want another theme, save current theme for parser to db
             page_num, joke_index, amount_pages = \
                 self.page_num, self.joke_index, self.amount_pages
-            if page_num <= amount_pages:
-                if self.jokes_len > joke_index:
-                    joke_index += 1
-                else:
-                    if page_num == amount_pages:
-                        page_num = 1
-                        joke_index = 0
-                    else:
-                        page_num += 1
-                        joke_index = 0
-
             word.page_num = page_num
             word.joke_index = joke_index
             word.amount_pages = amount_pages
@@ -83,15 +72,13 @@ class Combiner:
                 # create db record
                 self.run_parser()
                 # jokes does not exists
-                if not self.amount_pages:
-                    return
                 word = Word(word=self.word, amount_pages=self.amount_pages,
-                            chat_id=self.uid)
-                user = session.query(User).filter_by(chat_id=self.uid).first()
+                            user_id=self.uid)
+                user = session.query(User).filter_by(user_id=self.uid).first()
                 if user:
                     self.save([word], session)
                     return
-                user = User(chat_id=self.uid)
+                user = User(user_id=self.uid, username=self.username)
                 self.save([word, user], session)
 
     @staticmethod
@@ -120,7 +107,7 @@ class RatingFill:
         stack_jokes = []
         for joke in jokes:
             joke.position += 1
-            if joke.position >= AMOUNT_JOKES_FOR_RATING+1:
+            if joke.position >= AMOUNT_JOKES_FOR_RATING + 1:
                 self.delete(joke, session)
                 continue
             stack_jokes.append(joke)
@@ -139,6 +126,3 @@ class RatingFill:
     def delete(obj, session):
         session.delete(obj)
         session.commit()
-
-
-

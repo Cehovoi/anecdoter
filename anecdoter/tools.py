@@ -1,7 +1,9 @@
 
 def string_formatter(string):
     string = string.lower().strip()
-    # string = ''.join(ch for ch in string if ch.isspace() or ch.isalpha())
+    string = ''.join(ch for ch in string if ch.isspace() or ch.isalpha())
+    if not string or len(string) < 3 or len(string) > 100 or string.isspace():
+        return None
     return string
 
 

@@ -6,31 +6,30 @@ SIZE_OF_CASH = 10
 PHRASE_URL = 'https://www.anekdot.ru/search/?query={}&xcnt=20&mode=all&ch[j]=on&page={}'
 WORD_URL = 'https://www.anekdot.ru/search/?query={}&ch[j]=on&page={}'
 
-END_WARNING = 'Анекдоты на эту тему закончились, но не отчаивайся повторение мать заикания!'
-
 DOES_NOT_EXISTS = 'Анекдота на эту тему похоже в природе не существует.'
 
-RATING = 'Только сначала нажми на кнопку и оцени анекдот!'
+JOKES_OVER = 'Шутки в сторону... на эту тему они закончились и пойдут заново'
+
+ONE_MORE = 'Ещё'
 
 GRADE = '★'
 
-NEEDLESS_KEYS = ('state', 'word_f', 'joke')
+
 
 AMOUNT_JOKES_FOR_RATING = 9
 
-SEARCH_TRIGGER = 'search_word_for_get_joke'
 
-BLOCK_TRIGGER = 'ДА и НЕТ в данном случае не уместны'
-
-
-
-# SITE = 'https://anecdoter-web.herokuapp.com/rating/{}/{}'
 DOMAIN = 'anecdoter.su'
 SITE = 'anecdoter.su/rating/{}/{}'
 
-INVITATION = 'Спасибо за контент, анекдот добавлен на сайт, ' \
-             'зайди и посмотри анекдоты с ' \
-             'таким же рейтингом.\n'
+HELP_MESSAGE = 'Ты мне слово я тебе анекдот.\nАнекдот может быть бородатым ' \
+               'и не смешным\nЗа это можешь поставить ему плохую оценку.\n' \
+               'Все оценённые анекдоты попадают на сайт, ' \
+               'куда можешь попасть и ты ' \
+               'перейдя по ссылке после оценки.\n' \
+               'А можешь пока не оценивать и либо ткнуть на кнопку "Ещё" ' \
+               'либо написать новоё слово или фразу.\n' \
+               'Жми на старт и поехали!'
 
 
 LOGIN_ERROR = 'Admin panel only for those ' \
