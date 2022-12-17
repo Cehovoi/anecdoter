@@ -10,6 +10,8 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, unique=True)
     words = db.relationship('Word', cascade='all, delete', backref='parent')
+    rated = db.relationship('RatedJokes', cascade='all, delete',
+                            backref='parent')
     username = db.Column(db.String(64), nullable=True,)
     role = db.Column(db.String(64), default='user')
     login = db.Column(db.String(64), nullable=True, unique=True)
@@ -67,16 +69,13 @@ class Word(db.Model):
 class RatedJokes(db.Model):
     __tablename__ = 'rated_jokes'
     id = db.Column(db.Integer, primary_key=True)
-    word = db.Column(db.String(128))
     joke = db.Column(db.Text(), nullable=False)
     grade = db.Column(db.Integer, default=1)
     position = db.Column(db.Integer, default=1)
-    # todo add chat_id field bind with chat_id many(chat_id) -> one(user)
-    # before add new RatedJokes check words for coordinate fields
-    # if several rated (several chat_id) grade several numbers
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
 
-    def __init__(self, joke, grade, word):
-        self.word = word
+    def __init__(self, user_id, joke, grade):
+        self.user_id = user_id
         self.joke = joke
         self.grade = grade
 

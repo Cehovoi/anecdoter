@@ -40,14 +40,6 @@ class Cache(MemoryStorage):
                                             ('word_f', 'joke')))
         combiner.sync_db(change_word=True)
 
-    def set_user_grade(self, uid, message):
-        user_cache = self.get_user_cache(uid)
-
-        rating = RatingFill(word=user_cache['word'],
-                            joke=user_cache['joke'],
-                            grade=len(message))
-        rating.update_db()
-
     @staticmethod
     def process_joke_coordinate(uid, input_word, user_data, old_data, username):
         if user_data:

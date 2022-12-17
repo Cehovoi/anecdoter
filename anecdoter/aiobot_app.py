@@ -15,7 +15,7 @@ from aiogram.utils.callback_data import CallbackData
 
 from .consts import GRADE, DOMAIN, DOES_NOT_EXISTS, ONE_MORE, JOKES_OVER, \
     HELP_MESSAGE
-from .contoller import get_admin_rights
+from .contoller import get_admin_rights, RatingFill
 from .parser import DoesNotExists
 from .cache import cache
 
@@ -66,10 +66,10 @@ def get_confirm_buttons(joke_word=''):
     return more_button, new_joke_button
 
 
-def get_ratting_buttons():
+def get_rating_buttons():
     buttons = [get_button(
         title=GRADE * var,
-        action=f'ratting',
+        action=f'rating',
         amount=var,
     )
         for var in range(1, 6)]
@@ -106,14 +106,14 @@ def get_admin_keyboard():
 
 
 admin_keyboard = get_admin_keyboard()
-ratting_buttons = get_ratting_buttons()
+rating_buttons = get_rating_buttons()
 
 
 def get_user_keyboard(joke_word, enable_rating=True):
     markup = types.InlineKeyboardMarkup()
     if enable_rating:
-        markup.row(*ratting_buttons[:3])
-        markup.row(*ratting_buttons[-2:])
+        markup.row(*rating_buttons[:3])
+        markup.row(*rating_buttons[-2:])
     confirm_buttons = get_confirm_buttons(joke_word)
     more_button = confirm_buttons[0]
     new_joke_button = confirm_buttons[1]
@@ -212,7 +212,7 @@ async def cancel_handler(message: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda message: not all(
     [word.isalpha() for word in message.text.strip().split(' ')]),
-    state=Form.word)
+                    state=Form.word)
 async def process_new_word_invalid(message: types.Message):
     """
     If word is invalid
@@ -280,8 +280,8 @@ async def process_next_word(query: types.CallbackQuery, state: FSMContext):
         # remove grade button with link to site
         keyboard = []
         if joke:
-            keyboard.insert(0, ratting_buttons[-2:])
-            keyboard.insert(0, ratting_buttons[:3])
+            keyboard.insert(0, rating_buttons[-2:])
+            keyboard.insert(0, rating_buttons[:3])
     keyboard.append(confirm_buttons)
     markup['inline_keyboard'] = keyboard
     joke = joke if joke else JOKES_OVER
@@ -308,21 +308,23 @@ async def process_next_word(query: types.CallbackQuery):
     await query.message.answer("Давай тему: слово или фразу")
 
 
-@dp.callback_query_handler(user_cb.filter(action='ratting'), state='*')
-async def process_ratting_joke(query: types.CallbackQuery,
-                               callback_data: dict,
-                               ):
+@dp.callback_query_handler(user_cb.filter(action='rating'), state='*')
+async def process_rating_joke(query: types.CallbackQuery, callback_data: dict):
+    user_id = query.from_user.id
+    message_text = query.message.text
+    grade = int(callback_data['amount'])
+    rating = RatingFill(uid=user_id, joke=message_text, grade=grade)
+    rating.update_db()
     markup = query.message.reply_markup
-    invite_button = get_invite_button(int(callback_data['amount']))
-    # remove rows with ratting
+    invite_button = get_invite_button(grade)
+    # remove rows with rating
     markup['inline_keyboard'].pop(0)
     markup['inline_keyboard'].pop(0)
     # add row with invite
     markup['inline_keyboard'].insert(0, [invite_button])
     message_id = query.message.message_id
-    message_text = query.message.text
     await bot.edit_message_text(text=message_text,
-                                chat_id=query.from_user.id,
+                                chat_id=user_id,
                                 message_id=message_id,
                                 reply_markup=markup)
 

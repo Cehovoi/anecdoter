@@ -14,14 +14,6 @@ def aiobot():
 
 
 @cli.command()
-@click.option('--token_2', envvar="TOKEN_2")
-def telebot(token_2):
-    from anecdoter.bot_app import TeleBot
-    tele_bot = TeleBot(token=token_2)
-    tele_bot.run_telebot()
-
-
-@cli.command()
 def web():
     from anecdoter.web_app import create_app
     app = create_app()

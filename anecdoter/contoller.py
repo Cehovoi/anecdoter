@@ -94,8 +94,8 @@ class Combiner:
 
 class RatingFill:
 
-    def __init__(self, word, joke, grade):
-        self.word = word
+    def __init__(self, uid, joke, grade):
+        self.uid = uid
         self.joke = joke
         self.grade = grade
 
@@ -112,7 +112,7 @@ class RatingFill:
                 continue
             stack_jokes.append(joke)
 
-        joke = RatedJokes(word=self.word, joke=self.joke, grade=self.grade)
+        joke = RatedJokes(user_id=self.uid, joke=self.joke, grade=self.grade)
         stack_jokes.append(joke)
         self.save(stack_jokes, session)
 
