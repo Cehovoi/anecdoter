@@ -36,11 +36,11 @@ class User(db.Model, UserMixin):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return f'\nchat_id == {self.user_id}\n' \
-               f'username == {self.username}\n' \
-               f'created_on == {self.created_on}\n' \
-               f'role == {self.role}\n\n' \
-               f'{"w_"*20}\nwords == {self.words}\n{"w_"*20}\n'
+        return f'user_id== {self.user_id};' \
+               f'username == {self.username};' \
+               f'created_on == {self.created_on};' \
+               f'role == {self.role};' \
+               f'words == {self.words};'
 
 
 class Word(db.Model):
@@ -56,14 +56,14 @@ class Word(db.Model):
     def __init__(self, word, amount_pages, user_id):
         self.word = word
         self.amount_pages = amount_pages
-        self.user_id  = user_id
+        self.user_id = user_id
 
     def __repr__(self):
-        return f'\nword == {self.word}\n' \
-               f'joke_index == {self.joke_index}\n' \
-               f'page_num == {self.page_num}\n' \
-               f'amount_pages == {self.amount_pages}\n' \
-               f'created == {self.created}\n'
+        return f'word == {self.word};' \
+               f'joke_index == {self.joke_index};' \
+               f'page_num == {self.page_num};' \
+               f'amount_pages == {self.amount_pages};' \
+               f'created == {self.created};'
 
 
 class RatedJokes(db.Model):
@@ -80,10 +80,10 @@ class RatedJokes(db.Model):
         self.grade = grade
 
     def __repr__(self):
-        return f'\nword == {self.word}\n' \
-               f'joke == {self.joke}\n'\
-               f'grade == {self.grade}\n' \
-               f'position == {self.position}\n'
+        return f'user_id == {self.user_id};' \
+               f'joke == {self.joke};'\
+               f'grade == {self.grade};' \
+               f'position == {self.position};'
 
 
 @login.user_loader
@@ -108,6 +108,7 @@ class MyModelView(ModelView):
 
 admin.add_view(MyModelView(User, db.session))
 admin.add_view(MyModelView(Word, db.session))
+admin.add_view(MyModelView(RatedJokes, db.session))
 
 
 def recreate_database():

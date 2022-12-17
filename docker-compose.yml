@@ -20,13 +20,6 @@ services:
   env_file:
    - ./.env
 
- telebot:
-  build: .
-  depends_on:
-   - db
-  command: python app.py bot
-  env_file:
-   - ./.env
 
  db:
   image: postgres

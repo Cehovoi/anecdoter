@@ -76,12 +76,12 @@ def get_rating_buttons():
     return buttons
 
 
-def get_invite_button(amount):
+def get_invite_button(amount, uid):
     date = datetime.now().isoformat(sep=" ", timespec="seconds")
     invite_button = types.InlineKeyboardButton(
         text=f'{GRADE * amount}, {date}, на сайт 👆',
         callback_data=user_cb.new(action='invite', amount=0),
-        url=f'{DOMAIN}/rating/{amount}/1',
+        url=f'{DOMAIN}/rating/{amount}/{uid}',
     )
     return invite_button
 
@@ -316,7 +316,7 @@ async def process_rating_joke(query: types.CallbackQuery, callback_data: dict):
     rating = RatingFill(uid=user_id, joke=message_text, grade=grade)
     rating.update_db()
     markup = query.message.reply_markup
-    invite_button = get_invite_button(grade)
+    invite_button = get_invite_button(grade, user_id)
     # remove rows with rating
     markup['inline_keyboard'].pop(0)
     markup['inline_keyboard'].pop(0)
