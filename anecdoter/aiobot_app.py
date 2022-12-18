@@ -200,8 +200,9 @@ async def cmd_start(message: types.Message, state: FSMContext):
     Conversation's entry point
     """
     # Set state
+    markup = types.ReplyKeyboardRemove()
     await Form.word.set()
-    await message.answer("Давай тему: слово или фразу")
+    await message.answer("Давай тему: слово или фразу", reply_markup=markup)
 
 
 @dp.message_handler(state='*', commands='help')
