@@ -22,12 +22,16 @@ def rating(page, user_id):
 
 @blue.route('/login/<int:user_id>', methods=['POST', 'GET'])
 def login(user_id):
+    print("login(user_id):\n"*10)
     if request.method == 'POST':
         login = request.form.get('login', None)
         password = request.form.get('password', None)
         reg_button = request.form.get('REG', None)
+        print('password login', password, login)
         if reg_button:
-            user = db.session.query(User).filter_by(user_id=user_id).first()
+            print("reg_button")
+            user = db.session.query(User).filter_by(user_id=user_id,
+                                                    role='admin').first()
             user.login = login
             user.set_password = password
             try:
@@ -42,9 +46,9 @@ def login(user_id):
             db.session.close()
             return redirect(url_for('admin.index'))
 
-        user = db.session.query(User).filter_by(login=login).first()
+        user = db.session.query(User).filter_by(login=login,
+                                                role='admin').first()
         if user and user.check_password(password):
-
             login_user(user)
             return redirect(url_for('admin.index'))
         else:
