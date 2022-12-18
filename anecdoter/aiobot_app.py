@@ -77,9 +77,11 @@ def get_rating_buttons():
 
 
 def get_invite_button(amount, uid):
-    date = datetime.now().isoformat(sep=" ", timespec="seconds")
+    # bad idea get date from server
+    # different users have different time
+    # date = datetime.now().isoformat(sep=" ", timespec="seconds")
     invite_button = types.InlineKeyboardButton(
-        text=f'{GRADE * amount}, {date}, на сайт 👆',
+        text=f'{GRADE * amount}, на сайт 👆',
         callback_data=user_cb.new(action='invite', amount=0),
         url=f'{DOMAIN}/rating/{amount}/{uid}',
     )
