@@ -28,16 +28,16 @@ class Cache(MemoryStorage):
         try:
             for num, user_cache in enumerate(users_cache.values()):
                 data = (tuple(user_cache.values()))[0]['data']
-                data['uid'] = int((tuple(user_cache.keys()))[0])
-                self._drop_cache_to_db(data)
+                uid = int((tuple(user_cache.keys()))[0])
+                self._drop_cache_to_db(uid, data)
             return f'Dropped_cache_of_{num + 1}_users'
         except Exception as e:
             return f'Fail because {e}'
 
     @staticmethod
-    def _drop_cache_to_db(user_cache):
-        combiner = Combiner(**dic_shortener(user_cache.items(),
-                                            ('word_f', 'joke')))
+    def _drop_cache_to_db(uid, user_cache):
+        combiner = Combiner(uid=uid, **dic_shortener(user_cache.items(),
+                                                     ('word_f', 'joke')))
         combiner.sync_db(change_word=True)
 
     @staticmethod
