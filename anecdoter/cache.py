@@ -46,7 +46,7 @@ class Cache(MemoryStorage):
             # call from process_user_joke when jokes over on page
             # start parser with updated joke_index and page_num
             user_data = dic_shortener(user_data.items(), ('word_f', 'joke'))
-            combiner = Combiner(uid=uid, username=username, **user_data)
+            combiner = Combiner(uid=uid, **user_data)
             combiner.run_parser()
             user_data['word_f'] = combiner.jokefunc()
             return user_data

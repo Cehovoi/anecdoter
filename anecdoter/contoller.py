@@ -30,12 +30,12 @@ def get_admin_rights(user_id):
 
 
 class Combiner:
-    def __init__(self, uid, username, word, amount_pages=0,
+    def __init__(self, uid, word, amount_pages=0, username=None,
                  joke_index=0, page_num=1, jokes_len=0,):
         self.uid = uid
-        self.username = username
         self.word = word
         self.amount_pages = amount_pages
+        self.username = username
         self.joke_index = joke_index
         self.page_num = page_num
         self.jokes_len = jokes_len
