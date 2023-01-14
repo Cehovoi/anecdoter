@@ -22,16 +22,12 @@ def rating(page, user_id):
 
 @blue.route('/login/<int:user_id>', methods=['POST', 'GET'])
 def login(user_id):
-    print("login(user_id):\n"*10)
     if request.method == 'POST':
         login = request.form.get('login', None)
         password = request.form.get('password', None)
         reg_button = request.form.get('REG', None)
-        print('password login', password, login)
         if reg_button:
-            print("reg_button")
-            user = db.session.query(User).filter_by(user_id=user_id,
-                                                    role='admin').first()
+            user = db.session.query(User).filter_by(user_id=user_id).first()
             user.login = login
             user.set_password = password
             try:
@@ -41,25 +37,27 @@ def login(user_id):
             except IntegrityError:
                 return render_template('fail.html',
                                        id=user_id,
-                                       message='USERNAME ALREADY TAKEN')
+                                       message='Этот логин уже занят.')
             login_user(user)
             db.session.close()
             return redirect(url_for('admin.index'))
 
-        user = db.session.query(User).filter_by(login=login,
-                                                role='admin').first()
+        user = db.session.query(User).filter_by(login=login).first()
         if user and user.check_password(password):
             login_user(user)
             return redirect(url_for('admin.index'))
         else:
             return render_template('fail.html',
                                    id=user_id,
-                                   message='WRONG LOGIN OR PASSWORD')
+                                   message='Неправильный логин или пароль.')
     user = db.session.query(User).filter_by(user_id=user_id).first()
     if not user:
         return render_template('fail.html',
                                id=user_id,
-                               message=LOGIN_ERROR)
+                               message=f'Чтобы посмотреть админку '
+                                       f'сначала сходи в телегу '
+                                       f'и пообщайся с'
+                                       f'@anecdot_searcher_bot')
     if user.login:
         button = 'LOGIN'
     else:
@@ -72,5 +70,3 @@ def logout():
     user_id = current_user.user_id
     logout_user()
     return redirect(f'/rating/1/{user_id}')
-
-
