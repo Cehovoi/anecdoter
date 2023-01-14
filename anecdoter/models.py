@@ -99,7 +99,7 @@ class MyModelView(ModelView):
     column_searchable_list = ['user_id']
 
     def is_accessible(self):
-        if current_user.role != 'admin':
+        if hasattr(current_user, 'role') and current_user.role != 'admin':
             MyModelView.can_create = False
             MyModelView.can_edit = False
             MyModelView.can_delete = False
