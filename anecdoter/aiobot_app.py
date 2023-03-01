@@ -37,8 +37,9 @@ class Form(StatesGroup):
 
 
 def ssl_connect():
-    cert = os.path.abspath('nginx/.ssl/fullchain.pem')
-    key = os.path.abspath('nginx/.ssl/privkey.pem')
+    cert = os.path.abspath(f'nginx/.ssl/{os.getenv("CERT")}')
+    key = os.path.abspath(f'nginx/.ssl/{os.getenv("KEY")}')
+    logging.info(f'key {key}, cert {cert}')
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     context.load_cert_chain(cert, key)
     return context
@@ -345,7 +346,10 @@ async def on_startup(dp):
         types.BotCommand(command='/admin', description='Админка для админов'),
     ]
     await bot.set_my_commands(bot_commands)
-    await bot.set_webhook(web_hook_url)
+    await bot.set_webhook(
+        url=web_hook_url,
+        certificate=open(f'nginx/.ssl/{os.getenv("CERT")}', 'rb')
+    )
 
 
 async def on_shutdown(dp):
